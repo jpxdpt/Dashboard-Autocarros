@@ -1,0 +1,15 @@
+{
+  "name": "dashboard-autocarros",
+  "version": "1.0.0",
+  "description": "Sistema completo para gestão de manutenção e inspeções de autocarros",
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build"
+  },
+  "keywords": ["dashboard", "autocarros", "manutenção", "inspeções"],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,308 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  GESTOR
+  OPERADOR
+}
+
+enum SubscriptionPlan {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+}
+
+model Company {
+  id                String            @id @default(uuid())
+  name              String
+  email             String?           @unique
+  phone             String?
+  address           String?
+  subscriptionPlan  SubscriptionPlan  @default(FREE)
+  maxBuses          Int               @default(5)
+  isActive          Boolean           @default(true)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  users             User[]
+  buses             Bus[]
+  auditLogs         AuditLog[]
+  drivers           Driver[]
+  documents         Document[]
+  costs             Cost[]
+  emailConfig       EmailConfig?
+
+  @@map("companies")
+}
+
+model User {
+  id                String      @id @default(uuid())
+  email             String      @unique
+  password          String
+  name              String
+  role              UserRole    @default(OPERADOR)
+  companyId         String
+  isActive          Boolean     @default(true)
+  emailVerified     Boolean     @default(false)
+  passwordResetToken String?
+  passwordResetExpires DateTime?
+  lastLogin         DateTime?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  company           Company     @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  auditLogs         AuditLog[]
+
+  @@map("users")
+}
+
+model Bus {
+  id                String              @id @default(uuid())
+  matricula         String
+  companyId         String
+  brand             String?              // Marca
+  model             String?              // Modelo
+  year              Int?                 // Ano
+  chassisNumber     String?              // Número de chassi
+  currentMileage    Int?                 @default(0) // Quilometragem atual
+  lastMileageUpdate DateTime?            // Data da última atualização de km
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+  company           Company             @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  inspections       Inspection[]
+  emailAlerts       EmailAlert[]
+  odometerReadings   OdometerReading[]
+  maintenanceSchedules MaintenanceSchedule[]
+  driverAssignments DriverAssignment[]
+  documents         Document[]
+  costs             Cost[]
+
+  @@unique([companyId, matricula])
+  @@map("buses")
+}
+
+enum InspectionType {
+  EXTINTORES
+  PNEUS
+  REVISOES
+  LICENCAS_TCC
+  LICENCAS_COMUNITARIAS
+  INSPECOES
+}
+
+model Inspection {
+  id                 String          @id @default(uuid())
+  busId              String
+  type               InspectionType
+  lastInspectionDate DateTime
+  nextInspectionDate DateTime?
+  notes              String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  bus                Bus             @relation(fields: [busId], references: [id], onDelete: Cascade)
+
+  @@unique([busId, type])
+  @@map("inspections")
+}
+
+model EmailAlert {
+  id             String   @id @default(uuid())
+  busId          String
+  inspectionType String
+  sentAt         DateTime @default(now())
+  bus            Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
+
+  @@map("email_alerts")
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  companyId   String
+  userId      String?
+  action      String
+  entityType  String
+  entityId    String?
+  changes     String?  // JSON string with before/after
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, createdAt])
+  @@index([userId])
+  @@map("audit_logs")
+}
+
+// Sistema de Quilometragem
+model OdometerReading {
+  id          String   @id @default(uuid())
+  busId       String
+  mileage     Int      // Quilometragem registada
+  readingDate DateTime @default(now())
+  notes       String?
+  recordedBy  String?  // ID do utilizador que registou
+  createdAt   DateTime @default(now())
+  bus         Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
+
+  @@index([busId, readingDate])
+  @@map("odometer_readings")
+}
+
+// Agenda de Manutenção baseada em Quilometragem
+model MaintenanceSchedule {
+  id              String   @id @default(uuid())
+  busId           String
+  maintenanceType String   // Tipo de manutenção (ex: "Revisão 10.000km", "Troca de óleo")
+  mileageInterval Int      // Intervalo em km (ex: 10000)
+  lastMaintenanceMileage Int? // Última quilometragem em que foi feita
+  nextMaintenanceMileage Int  // Próxima quilometragem prevista
+  isActive        Boolean  @default(true)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  bus             Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
+
+  @@index([busId])
+  @@map("maintenance_schedules")
+}
+
+// Gestão de Condutores
+model Driver {
+  id              String            @id @default(uuid())
+  companyId       String
+  name            String
+  licenseNumber   String            // Número da carta de condução
+  licenseCategory String            // Categoria (ex: "D", "D+E")
+  phone           String?
+  email           String?
+  address         String?
+  hireDate        DateTime?         // Data de contratação
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  company         Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  licenses        DriverLicense[]
+  assignments     DriverAssignment[]
+
+  @@unique([companyId, licenseNumber])
+  @@map("drivers")
+}
+
+// Licenças de Condutores
+model DriverLicense {
+  id              String   @id @default(uuid())
+  driverId        String
+  licenseNumber   String
+  category        String   // Categoria da carta
+  issueDate       DateTime // Data de emissão
+  expiryDate      DateTime // Data de expiração
+  issuingAuthority String? // Autoridade emissora
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  driver          Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([driverId, expiryDate])
+  @@map("driver_licenses")
+}
+
+// Associação de Condutores a Autocarros
+model DriverAssignment {
+  id          String   @id @default(uuid())
+  busId       String
+  driverId    String
+  assignedAt  DateTime @default(now())
+  unassignedAt DateTime?
+  notes       String?
+  bus         Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
+  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@index([busId])
+  @@index([driverId])
+  @@map("driver_assignments")
+}
+
+// Gestão de Documentos
+model Document {
+  id              String   @id @default(uuid())
+  busId           String?
+  driverId        String?
+  companyId       String
+  name            String
+  type            String   // Tipo de documento (ex: "Seguro", "Licença", "Certificado")
+  fileUrl         String?  // URL do ficheiro (se armazenado em cloud)
+  fileName        String?  // Nome original do ficheiro
+  fileSize        Int?     // Tamanho em bytes
+  mimeType        String?  // Tipo MIME
+  issueDate       DateTime?
+  expiryDate      DateTime?
+  isActive        Boolean  @default(true)
+  notes           String?
+  uploadedBy      String?  // ID do utilizador que fez upload
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  bus             Bus?     @relation(fields: [busId], references: [id], onDelete: Cascade)
+  company         Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([busId])
+  @@index([driverId])
+  @@index([expiryDate])
+  @@map("documents")
+}
+
+// Gestão de Custos
+model Cost {
+  id          String   @id @default(uuid())
+  busId       String?
+  companyId   String
+  category    String   // Categoria (ex: "Manutenção", "Combustível", "Seguro", "Impostos")
+  description String
+  amount      Decimal  // Valor em euros
+  date        DateTime @default(now())
+  mileage    Int?     // Quilometragem no momento do custo
+  invoiceNumber String? // Número da fatura
+  supplier    String?  // Fornecedor
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  bus         Bus?     @relation(fields: [busId], references: [id], onDelete: SetNull)
+
+  @@index([companyId, date])
+  @@index([busId])
+  @@map("costs")
+}
+
+// Configurações de Email por Empresa
+model EmailConfig {
+  id                String   @id @default(uuid())
+  companyId         String   @unique
+  smtpHost          String   @default("smtp.gmail.com")
+  smtpPort          Int      @default(587)
+  smtpSecure        Boolean  @default(false)
+  smtpUser          String
+  smtpPassword      String   // Encriptado
+  emailFrom         String
+  emailTo           String   // Email principal para receber alertas
+  alertDaysBefore   Int      @default(30) // Dias antes de enviar alerta
+  isEnabled         Boolean  @default(true)
+  testEmailSent     Boolean  @default(false)
+  lastTestDate      DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  company           Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@map("email_configs")
+}
+
