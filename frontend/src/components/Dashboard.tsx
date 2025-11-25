@@ -1,8 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Bus, InspectionType, Inspection, busesApi, inspectionsApi } from '../services/api';
 import { authService } from '../services/auth';
-import BusTable from './BusTable';
-import BusCard from './BusCard';
 import BusForm from './BusForm';
 import InspectionForm from './InspectionForm';
 import MileageManagement from './MileageManagement';

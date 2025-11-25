@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { authService, RegisterData } from '../services/auth';
 
 interface RegisterProps {
@@ -13,7 +13,6 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
   const [companyName, setCompanyName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,7 +21,7 @@ export default function Register({ onRegisterSuccess }: RegisterProps) {
 
     try {
       const registerData: RegisterData = { name, email, password, companyName };
-      const response = await authService.register(registerData);
+      await authService.register(registerData);
       
       // Verificar se os tokens foram guardados
       if (!authService.getToken()) {

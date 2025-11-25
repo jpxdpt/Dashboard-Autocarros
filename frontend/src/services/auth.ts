@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_URL = '/api';
+// Usar variável de ambiente ou fallback para /api (proxy local)
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 export interface User {
   id: string;

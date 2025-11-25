@@ -25,7 +25,7 @@ interface BusesTabProps {
 export default function BusesTab({
   buses,
   filteredBuses,
-  loading,
+  loading: _loading,
   viewMode,
   setViewMode,
   searchTerm,
@@ -35,7 +35,7 @@ export default function BusesTab({
   filterInspectionType,
   setFilterInspectionType,
   stats,
-  handleAddBus,
+  handleAddBus: _handleAddBus,
   handleEditBus,
   handleDeleteBus,
   handleInspectionClick,

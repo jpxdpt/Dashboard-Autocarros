@@ -1,8 +1,11 @@
 import axios from 'axios';
 import { authService } from './auth';
 
+// Usar variável de ambiente ou fallback para /api (proxy local)
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },

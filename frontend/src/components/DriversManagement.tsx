@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { driversApi, Driver, DriverLicense, DriverAssignment } from '../services/driversApi';
+import { driversApi, Driver } from '../services/driversApi';
 import { busesApi, Bus } from '../services/api';
 import { useToast } from '../hooks/useToast';
 
@@ -375,16 +375,6 @@ export default function DriversManagement() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredDrivers.map((driver) => {
           const activeAssignments = driver.assignments?.filter(a => !a.unassignedAt) || [];
-          const expiringLicenses = driver.licenses?.filter(l => {
-            const expiryDate = new Date(l.expiryDate);
-            const today = new Date();
-            const daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-            return daysUntilExpiry <= 90 && daysUntilExpiry >= 0;
-          }) || [];
-          const expiredLicenses = driver.licenses?.filter(l => {
-            const expiryDate = new Date(l.expiryDate);
-            return expiryDate < new Date();
-          }) || [];
 
           return (
             <div key={driver.id} className="bg-white rounded-lg shadow-md p-6">

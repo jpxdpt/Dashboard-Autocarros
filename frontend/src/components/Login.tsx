@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { authService, LoginData } from '../services/auth';
 
 interface LoginProps {
@@ -11,7 +11,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +19,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
     try {
       const loginData: LoginData = { email, password };
-      const response = await authService.login(loginData);
+      await authService.login(loginData);
       
       // Verificar se os tokens foram guardados
       if (!authService.getToken()) {
