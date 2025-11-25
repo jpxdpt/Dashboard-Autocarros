@@ -11,10 +11,27 @@ import settingsRoutes from '../src/routes/settings';
 
 const app = express();
 
-// CORS - permitir todos os domínios (ou configurar específicos)
+// CORS - configurar antes de qualquer middleware
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.header('Access-Control-Allow-Credentials', 'false');
+  
+  // Responder imediatamente a pedidos OPTIONS (preflight)
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  
+  next();
+});
+
+// Também usar o middleware cors como backup
 app.use(cors({
-  origin: true, // Permitir todos os origins (ou configurar específicos)
-  credentials: true,
+  origin: '*',
+  credentials: false,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
 }));
 
 app.use(express.json());

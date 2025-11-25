@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 // Usar variável de ambiente ou fallback para /api (proxy local)
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+// Se VITE_API_URL já incluir o domínio completo, adicionar /api
+const BASE_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = BASE_URL.endsWith('/api') ? BASE_URL : `${BASE_URL}/api`;
 
 export interface User {
   id: string;
