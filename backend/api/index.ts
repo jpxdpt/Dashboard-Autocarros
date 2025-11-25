@@ -1,5 +1,4 @@
 import express from 'express';
-import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import authRoutes from '../src/routes/auth';
 import busesRoutes from '../src/routes/buses';
@@ -18,7 +17,9 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.setHeader('Access-Control-Allow-Credentials', 'false');
+  // Não definir Access-Control-Allow-Credentials se não usarmos cookies/sessões
+  // Se precisares de credentials no futuro, descomentar e usar 'true' como string:
+  // res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
   
   // Responder imediatamente a pedidos OPTIONS (preflight) - CRÍTICO
@@ -29,15 +30,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Middleware cors como backup adicional
-app.use(cors({
-  origin: '*',
-  credentials: false,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  preflightContinue: false,
-  optionsSuccessStatus: 200,
-}));
+// Removido app.use(cors()) - já está tratado pelo middleware manual acima
 
 app.use(express.json());
 
