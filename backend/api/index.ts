@@ -11,27 +11,32 @@ import settingsRoutes from '../src/routes/settings';
 
 const app = express();
 
-// CORS - configurar antes de qualquer middleware
+// CORS - Middleware que garante headers em TODAS as respostas
 app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.header('Access-Control-Allow-Credentials', 'false');
+  // Permitir qualquer origem (ou configurar origem específica)
+  const origin = req.headers.origin;
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Allow-Credentials', 'false');
+  res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
   
-  // Responder imediatamente a pedidos OPTIONS (preflight)
+  // Responder imediatamente a pedidos OPTIONS (preflight) - CRÍTICO
   if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
+    return res.status(200).end();
   }
   
   next();
 });
 
-// Também usar o middleware cors como backup
+// Middleware cors como backup adicional
 app.use(cors({
   origin: '*',
   credentials: false,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  preflightContinue: false,
+  optionsSuccessStatus: 200,
 }));
 
 app.use(express.json());
