@@ -68,9 +68,5 @@ app.get('/api/health', (req, res) => {
 });
 
 // Exportar para Vercel Serverless Functions
-// O Vercel automaticamente envolve o Express app
 export default app;
-
-// Handler alternativo se o default não funcionar
-export const handler = app;
 
