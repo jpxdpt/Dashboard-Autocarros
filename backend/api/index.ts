@@ -11,7 +11,21 @@ import settingsRoutes from '../src/routes/settings';
 const app = express();
 
 // Handler GLOBAL para OPTIONS - DEVE ser o PRIMEIRO handler
+// Isto captura TODOS os pedidos OPTIONS antes de qualquer outro middleware
 app.options('*', (req, res) => {
+  console.log('[CORS] OPTIONS request recebido:', req.path, 'Origin:', req.headers.origin);
+  const origin = req.headers.origin;
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  console.log('[CORS] Headers definidos, retornando 200');
+  return res.status(200).end();
+});
+
+// Handler específico para /api/auth/login OPTIONS
+app.options('/api/auth/login', (req, res) => {
+  console.log('[CORS] OPTIONS /api/auth/login recebido');
   const origin = req.headers.origin;
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
@@ -31,6 +45,7 @@ app.use((req, res, next) => {
   
   // Responder imediatamente a pedidos OPTIONS (preflight) - CRÍTICO
   if (req.method === 'OPTIONS') {
+    console.log('[CORS Middleware] OPTIONS detectado, retornando 200');
     return res.status(200).end();
   }
   
