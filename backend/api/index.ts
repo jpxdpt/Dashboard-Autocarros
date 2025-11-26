@@ -10,22 +10,13 @@ import settingsRoutes from '../src/routes/settings';
 
 const app = express();
 
-// Handler GLOBAL para OPTIONS - DEVE ser o PRIMEIRO handler
-// Isto captura TODOS os pedidos OPTIONS antes de qualquer outro middleware
+// ============================================
+// CORS - DEVE SER O PRIMEIRO MIDDLEWARE!
+// NADA pode ser executado antes disto!
+// ============================================
+
+// Handler GLOBAL para OPTIONS - captura TODOS os OPTIONS antes de QUALQUER outra coisa
 app.options('*', (req, res) => {
-  console.log('[CORS] OPTIONS request recebido:', req.path, 'Origin:', req.headers.origin);
-  const origin = req.headers.origin;
-  res.setHeader('Access-Control-Allow-Origin', origin || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.setHeader('Access-Control-Max-Age', '86400');
-  console.log('[CORS] Headers definidos, retornando 200');
-  return res.status(200).end();
-});
-
-// Handler específico para /api/auth/login OPTIONS
-app.options('/api/auth/login', (req, res) => {
-  console.log('[CORS] OPTIONS /api/auth/login recebido');
   const origin = req.headers.origin;
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
@@ -34,45 +25,47 @@ app.options('/api/auth/login', (req, res) => {
   return res.status(200).end();
 });
 
-// CORS - Middleware que garante headers em TODAS as respostas
+// Middleware CORS - aplica headers a TODAS as respostas
+// Responde a OPTIONS ANTES de qualquer outro middleware processar
 app.use((req, res, next) => {
-  // Permitir qualquer origem (ou configurar origem específica)
   const origin = req.headers.origin;
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
+  res.setHeader('Access-Control-Max-Age', '86400');
   
-  // Responder imediatamente a pedidos OPTIONS (preflight) - CRÍTICO
+  // CRÍTICO: Responder a OPTIONS ANTES de qualquer outro middleware
   if (req.method === 'OPTIONS') {
-    console.log('[CORS Middleware] OPTIONS detectado, retornando 200');
     return res.status(200).end();
   }
   
   next();
 });
 
-// Removido app.use(cors()) - já está tratado pelo middleware manual acima
+// ============================================
+// SÓ AGORA é que aplicamos outros middlewares
+// ============================================
 
-// express.json() - OPTIONS já foi tratado acima, então este middleware não será executado para OPTIONS
+// express.json() - só processa pedidos que não sejam OPTIONS
 app.use(express.json());
 
-// Rate limiting - ignorar pedidos OPTIONS (preflight)
+// Rate limiting - configurado para ignorar OPTIONS (mas já foram tratados acima)
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por IP
+  windowMs: 15 * 60 * 1000,
+  max: 100,
   message: 'Muitos pedidos deste IP, tente novamente mais tarde.',
-  skip: (req) => req.method === 'OPTIONS', // Ignorar preflight requests
+  skip: (req) => req.method === 'OPTIONS',
 });
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // máximo 5 tentativas de login
+  windowMs: 15 * 60 * 1000,
+  max: 5,
   message: 'Muitas tentativas de login, tente novamente mais tarde.',
   skipSuccessfulRequests: true,
-  skip: (req) => req.method === 'OPTIONS', // Ignorar preflight requests
+  skip: (req) => req.method === 'OPTIONS',
 });
 
+// Rate limiting aplicado DEPOIS do CORS
 app.use('/api/', limiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/forgot-password', authLimiter);
