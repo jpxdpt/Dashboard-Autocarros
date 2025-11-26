@@ -34,13 +34,8 @@ app.use((req, res, next) => {
 
 // Removido app.use(cors()) - já está tratado pelo middleware manual acima
 
-// express.json() só deve processar pedidos que não sejam OPTIONS
-app.use((req, res, next) => {
-  if (req.method === 'OPTIONS') {
-    return next(); // Já foi tratado acima, mas garantir que não processa body
-  }
-  express.json()(req, res, next);
-});
+// express.json() - OPTIONS já foi tratado acima, então este middleware não será executado para OPTIONS
+app.use(express.json());
 
 // Rate limiting - ignorar pedidos OPTIONS (preflight)
 const limiter = rateLimit({
