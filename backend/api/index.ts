@@ -10,21 +10,26 @@ import settingsRoutes from '../src/routes/settings';
 
 const app = express();
 
+// Handler GLOBAL para OPTIONS - DEVE ser o PRIMEIRO handler
+app.options('*', (req, res) => {
+  const origin = req.headers.origin;
+  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  return res.status(200).end();
+});
+
 // CORS - Middleware que garante headers em TODAS as respostas
-// DEVE ser o PRIMEIRO middleware para responder ao OPTIONS antes de qualquer outro processamento
 app.use((req, res, next) => {
   // Permitir qualquer origem (ou configurar origem específica)
   const origin = req.headers.origin;
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  // Não definir Access-Control-Allow-Credentials se não usarmos cookies/sessões
-  // Se precisares de credentials no futuro, descomentar e usar 'true' como string:
-  // res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
   
   // Responder imediatamente a pedidos OPTIONS (preflight) - CRÍTICO
-  // Isto DEVE acontecer ANTES de qualquer outro middleware processar o pedido
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
