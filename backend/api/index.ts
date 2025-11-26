@@ -34,11 +34,12 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// Rate limiting
+// Rate limiting - ignorar pedidos OPTIONS (preflight)
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
   max: 100, // máximo 100 requests por IP
   message: 'Muitos pedidos deste IP, tente novamente mais tarde.',
+  skip: (req) => req.method === 'OPTIONS', // Ignorar preflight requests
 });
 
 const authLimiter = rateLimit({
@@ -46,6 +47,7 @@ const authLimiter = rateLimit({
   max: 5, // máximo 5 tentativas de login
   message: 'Muitas tentativas de login, tente novamente mais tarde.',
   skipSuccessfulRequests: true,
+  skip: (req) => req.method === 'OPTIONS', // Ignorar preflight requests
 });
 
 app.use('/api/', limiter);
