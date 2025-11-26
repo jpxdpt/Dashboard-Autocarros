@@ -11,6 +11,7 @@ import settingsRoutes from '../src/routes/settings';
 const app = express();
 
 // CORS - Middleware que garante headers em TODAS as respostas
+// DEVE ser o PRIMEIRO middleware para responder ao OPTIONS antes de qualquer outro processamento
 app.use((req, res, next) => {
   // Permitir qualquer origem (ou configurar origem específica)
   const origin = req.headers.origin;
@@ -23,6 +24,7 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Max-Age', '86400'); // 24 horas
   
   // Responder imediatamente a pedidos OPTIONS (preflight) - CRÍTICO
+  // Isto DEVE acontecer ANTES de qualquer outro middleware processar o pedido
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -32,7 +34,13 @@ app.use((req, res, next) => {
 
 // Removido app.use(cors()) - já está tratado pelo middleware manual acima
 
-app.use(express.json());
+// express.json() só deve processar pedidos que não sejam OPTIONS
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    return next(); // Já foi tratado acima, mas garantir que não processa body
+  }
+  express.json()(req, res, next);
+});
 
 // Rate limiting - ignorar pedidos OPTIONS (preflight)
 const limiter = rateLimit({
