@@ -242,7 +242,7 @@ router.post('/refresh', async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/forgot-password - Solicitar reset de password
-router.post('/forgot-password', async (req: Request, res: Response) => {
+router.post('/forgot-password', authLimiter, async (req: Request, res: Response) => {
   try {
     const { email } = passwordResetRequestSchema.parse(req.body);
 
