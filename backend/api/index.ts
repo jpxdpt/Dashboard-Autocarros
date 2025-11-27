@@ -11,22 +11,8 @@ import settingsRoutes from '../src/routes/settings';
 const app = express();
 
 // ============================================
-// CORS - DEVE SER O PRIMEIRO MIDDLEWARE!
-// NADA pode ser executado antes disto!
+// CORS - PRIMEIRO MIDDLEWARE ABSOLUTO
 // ============================================
-
-// Handler GLOBAL para OPTIONS - captura TODOS os OPTIONS antes de QUALQUER outra coisa
-app.options('*', (req, res) => {
-  const origin = req.headers.origin;
-  res.setHeader('Access-Control-Allow-Origin', origin || '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.setHeader('Access-Control-Max-Age', '86400');
-  return res.status(200).end();
-});
-
-// Middleware CORS - aplica headers a TODAS as respostas
-// Responde a OPTIONS ANTES de qualquer outro middleware processar
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
@@ -34,27 +20,24 @@ app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Max-Age', '86400');
   
-  // CRÍTICO: Responder a OPTIONS ANTES de qualquer outro middleware
+  // CRÍTICO: Responder OPTIONS IMEDIATAMENTE, sem passar por rate limiting
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    return res.status(204).end(); // 204 No Content é mais correto para OPTIONS
   }
   
   next();
 });
 
-// ============================================
-// SÓ AGORA é que aplicamos outros middlewares
-// ============================================
-
-// express.json() - só processa pedidos que não sejam OPTIONS
+// Body parsing
 app.use(express.json());
 
-// Rate limiting - configurado para ignorar OPTIONS (mas já foram tratados acima)
+// ============================================
+// Rate Limiting - DEPOIS de CORS e apenas para não-OPTIONS
+// ============================================
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: 'Muitos pedidos deste IP, tente novamente mais tarde.',
-  skip: (req) => req.method === 'OPTIONS',
 });
 
 const authLimiter = rateLimit({
@@ -62,13 +45,18 @@ const authLimiter = rateLimit({
   max: 5,
   message: 'Muitas tentativas de login, tente novamente mais tarde.',
   skipSuccessfulRequests: true,
-  skip: (req) => req.method === 'OPTIONS',
 });
 
-// Rate limiting aplicado DEPOIS do CORS
-app.use('/api/', limiter);
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/forgot-password', authLimiter);
+// Aplicar rate limiting APENAS às rotas específicas (não globalmente)
+// E garantir que OPTIONS nunca chega aqui (já foi tratado acima)
+app.use('/api/', (req, res, next) => {
+  if (req.method === 'OPTIONS') return next(); // Extra safety
+  limiter(req, res, next);
+});
+
+// Rate limiter de auth aplicado SÓ aos endpoints POST (não OPTIONS)
+app.post('/api/auth/login', authLimiter);
+app.post('/api/auth/forgot-password', authLimiter);
 
 // Rotas públicas
 app.use('/api/auth', authRoutes);
