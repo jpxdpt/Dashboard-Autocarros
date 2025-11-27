@@ -11,63 +11,45 @@ import settingsRoutes from '../src/routes/settings';
 const app = express();
 
 // ============================================
-// CORS - PRIMEIRO MIDDLEWARE ABSOLUTO
-// Tratar OPTIONS ANTES de qualquer outra coisa
+// CORS HANDLER - ABSOLUTAMENTE PRIMEIRO
 // ============================================
-
-// Handler específico para OPTIONS - captura ANTES de qualquer middleware
 app.use((req, res, next) => {
-  // Se for OPTIONS, responder IMEDIATAMENTE sem processar mais nada
-  if (req.method === 'OPTIONS') {
-    const origin = req.headers.origin;
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    res.setHeader('Access-Control-Max-Age', '86400');
-    return res.status(204).end();
-  }
-  next();
-});
-
-// Middleware CORS para todas as outras respostas
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Max-Age', '86400');
+  
+  // OPTIONS deve retornar IMEDIATAMENTE 204
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
   next();
 });
 
-// Body parsing
+// SÓ DEPOIS vem express.json() e rate limiting
 app.use(express.json());
 
-// ============================================
-// Rate Limiting - DEPOIS de CORS e apenas para não-OPTIONS
-// ============================================
+// Rate limiting SEM aplicar a OPTIONS
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: 'Muitos pedidos deste IP, tente novamente mais tarde.',
 });
 
-const authLimiter = rateLimit({
+export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 5,
   message: 'Muitas tentativas de login, tente novamente mais tarde.',
   skipSuccessfulRequests: true,
 });
 
-// Aplicar rate limiting APENAS às rotas específicas (não globalmente)
-// E garantir que OPTIONS nunca chega aqui (já foi tratado acima)
+// Aplicar limiters CONDICIONALMENTE (não a OPTIONS)
 app.use('/api/', (req, res, next) => {
-  if (req.method === 'OPTIONS') return next(); // Extra safety
+  if (req.method === 'OPTIONS') return next();
   limiter(req, res, next);
 });
-
-// Rate limiter de auth aplicado SÓ aos endpoints POST (não OPTIONS)
-app.post('/api/auth/login', authLimiter);
-app.post('/api/auth/forgot-password', authLimiter);
 
 // Rotas públicas
 app.use('/api/auth', authRoutes);
@@ -85,18 +67,5 @@ app.get('/api/health', (req, res) => {
 });
 
 // Exportar para Vercel Serverless Functions
-// Handler específico para garantir que OPTIONS é tratado mesmo no Vercel
-export default (req: any, res: any) => {
-  // Se for OPTIONS, responder IMEDIATAMENTE antes de passar para o Express
-  if (req.method === 'OPTIONS') {
-    const origin = req.headers?.origin || req.headers?.Origin;
-    res.setHeader('Access-Control-Allow-Origin', origin || '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-    res.setHeader('Access-Control-Max-Age', '86400');
-    return res.status(204).end();
-  }
-  // Para todos os outros métodos, passar para o Express app
-  return app(req, res);
-};
+export default app;
 

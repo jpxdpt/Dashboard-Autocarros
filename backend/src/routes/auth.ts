@@ -12,6 +12,7 @@ import {
 import { sendPasswordResetEmail } from '../services/emailService';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { UserRole } from '@prisma/client';
+import { authLimiter } from '../../api/index';
 
 const router = Router();
 
@@ -129,7 +130,7 @@ router.post('/register', async (req: Request, res: Response) => {
 });
 
 // POST /api/auth/login - Login
-router.post('/login', async (req: Request, res: Response) => {
+router.post('/login', authLimiter, async (req: Request, res: Response) => {
   try {
     const validatedData = loginSchema.parse(req.body);
 
