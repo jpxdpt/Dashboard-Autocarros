@@ -1,3 +1,4 @@
+import { VercelRequest, VercelResponse } from '@vercel/node';
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import authRoutes from '../src/routes/auth';
@@ -10,20 +11,9 @@ import settingsRoutes from '../src/routes/settings';
 
 const app = express();
 
-// CORS middleware para todas as requests
-app.use((req, res, next) => {
-  const origin = req.headers.origin || '*';
-  res.setHeader('Access-Control-Allow-Origin', origin);
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.setHeader('Access-Control-Max-Age', '86400');
-  next();
-});
-
-// Body parsing
+// Express middlewares
 app.use(express.json());
 
-// Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
@@ -37,7 +27,7 @@ export const authLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
-// Aplicar limiters CONDICIONALMENTE (não a OPTIONS)
+// Aplicar rate limiting CONDICIONALMENTE (não a OPTIONS)
 app.use('/api/', (req, res, next) => {
   if (req.method === 'OPTIONS') return next();
   limiter(req, res, next);
@@ -58,22 +48,27 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', platform: 'vercel' });
 });
 
-// Exportar para Vercel Serverless Functions
-// Handler wrapper que trata OPTIONS ANTES do Express
-export default (req: any, res: any) => {
-  // CORS headers ANTES de qualquer coisa
-  const origin = req.headers?.origin || req.headers?.Origin || '*';
+// HANDLER VERCEL que adiciona CORS ANTES de passar para Express
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  const origin = req.headers.origin || '*';
+  
+  // CORS headers
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Max-Age', '86400');
-
-  // OPTIONS responde IMEDIATAMENTE
+  
+  // OPTIONS responde imediatamente
   if (req.method === 'OPTIONS') {
     return res.status(204).end();
   }
-
-  // Passa para o Express app
-  return app(req, res);
-};
+  
+  // Passar para Express app
+  return new Promise((resolve, reject) => {
+    app(req as any, res as any, (err: any) => {
+      if (err) reject(err);
+      else resolve(undefined);
+    });
+  });
+}
 
