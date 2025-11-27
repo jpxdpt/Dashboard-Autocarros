@@ -12,19 +12,30 @@ const app = express();
 
 // ============================================
 // CORS - PRIMEIRO MIDDLEWARE ABSOLUTO
+// Tratar OPTIONS ANTES de qualquer outra coisa
 // ============================================
+
+// Handler específico para OPTIONS - captura ANTES de qualquer middleware
+app.use((req, res, next) => {
+  // Se for OPTIONS, responder IMEDIATAMENTE sem processar mais nada
+  if (req.method === 'OPTIONS') {
+    const origin = req.headers.origin;
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    return res.status(204).end();
+  }
+  next();
+});
+
+// Middleware CORS para todas as outras respostas
 app.use((req, res, next) => {
   const origin = req.headers.origin;
   res.setHeader('Access-Control-Allow-Origin', origin || '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Max-Age', '86400');
-  
-  // CRÍTICO: Responder OPTIONS IMEDIATAMENTE, sem passar por rate limiting
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end(); // 204 No Content é mais correto para OPTIONS
-  }
-  
   next();
 });
 
@@ -74,5 +85,18 @@ app.get('/api/health', (req, res) => {
 });
 
 // Exportar para Vercel Serverless Functions
-export default app;
+// Handler específico para garantir que OPTIONS é tratado mesmo no Vercel
+export default (req: any, res: any) => {
+  // Se for OPTIONS, responder IMEDIATAMENTE antes de passar para o Express
+  if (req.method === 'OPTIONS') {
+    const origin = req.headers?.origin || req.headers?.Origin;
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.setHeader('Access-Control-Max-Age', '86400');
+    return res.status(204).end();
+  }
+  // Para todos os outros métodos, passar para o Express app
+  return app(req, res);
+};
 
