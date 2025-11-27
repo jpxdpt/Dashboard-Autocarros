@@ -11,20 +11,24 @@ import settingsRoutes from '../src/routes/settings';
 const app = express();
 
 // ============================================
-// CORS HANDLER - ABSOLUTAMENTE PRIMEIRO
+// HANDLER OPTIONS GLOBAL - ANTES DE TUDO
 // ============================================
+app.options('*', (req, res) => {
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+  res.setHeader('Access-Control-Max-Age', '86400');
+  return res.status(204).end();
+});
+
+// CORS middleware para outras requests
 app.use((req, res, next) => {
   const origin = req.headers.origin || '*';
   res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Max-Age', '86400');
-  
-  // OPTIONS deve retornar IMEDIATAMENTE 204
-  if (req.method === 'OPTIONS') {
-    return res.status(204).end();
-  }
-  
   next();
 });
 
