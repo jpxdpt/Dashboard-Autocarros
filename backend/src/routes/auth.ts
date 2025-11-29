@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { z } from 'zod';
+import rateLimit from 'express-rate-limit';
 import prisma from '../config/database';
 import {
   hashPassword,
@@ -12,9 +13,16 @@ import {
 import { sendPasswordResetEmail } from '../services/emailService';
 import { authenticate, AuthRequest } from '../middleware/auth';
 import { UserRole } from '@prisma/client';
-import { authLimiter } from '../../api/index';
 
 const router = Router();
+
+// Rate limiter para autenticação
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // máximo 5 tentativas
+  message: 'Muitas tentativas de login, tente novamente mais tarde.',
+  skipSuccessfulRequests: true,
+});
 
 // OPTIONS já é tratado globalmente no index.ts antes de chegar aqui
 // Não precisamos de handler OPTIONS duplicado neste router

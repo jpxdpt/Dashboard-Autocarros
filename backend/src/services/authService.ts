@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import prisma from '../config/database';
 import { UserRole } from '@prisma/client';
 
@@ -49,14 +49,14 @@ export async function comparePassword(password: string, hashedPassword: string):
 
 export function generateAccessToken(payload: TokenPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
-    expiresIn: JWT_EXPIRES_IN,
-  });
+    expiresIn: JWT_EXPIRES_IN as string,
+  } as SignOptions);
 }
 
 export function generateRefreshToken(payload: TokenPayload): string {
   return jwt.sign(payload, REFRESH_TOKEN_SECRET, {
-    expiresIn: REFRESH_TOKEN_EXPIRES_IN,
-  });
+    expiresIn: REFRESH_TOKEN_EXPIRES_IN as string,
+  } as SignOptions);
 }
 
 export function verifyAccessToken(token: string): TokenPayload {
