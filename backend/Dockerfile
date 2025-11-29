@@ -38,7 +38,7 @@ COPY --from=builder /app/package*.json ./
 # Gerar Prisma Client na imagem final
 RUN npx prisma generate
 
-EXPOSE 6000
+EXPOSE 8080
 
 # Comando para executar migrations e iniciar servidor
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/server.js"]
