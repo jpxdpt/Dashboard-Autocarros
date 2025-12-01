@@ -119,25 +119,6 @@ router.post('/', authorize(UserRole.ADMIN, UserRole.GESTOR), async (req: AuthReq
 
     const validatedData = busSchema.parse(req.body);
 
-    // Verificar limite de autocarros
-    const company = await prisma.company.findUnique({
-      where: { id: req.companyId },
-    });
-
-    if (!company) {
-      return res.status(404).json({ error: 'Empresa não encontrada' });
-    }
-
-    const busCount = await prisma.bus.count({
-      where: { companyId: req.companyId },
-    });
-
-    if (busCount >= company.maxBuses) {
-      return res.status(403).json({
-        error: `Limite de autocarros atingido (${company.maxBuses}). Atualize o seu plano.`,
-      });
-    }
-
     const bus = await prisma.bus.create({
       data: {
         matricula: validatedData.matricula.toUpperCase(),

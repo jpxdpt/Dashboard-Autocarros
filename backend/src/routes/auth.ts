@@ -74,7 +74,6 @@ router.post('/register', async (req: Request, res: Response) => {
         name: validatedData.companyName,
         email: validatedData.email,
         subscriptionPlan: 'FREE',
-        maxBuses: 5,
       },
     });
 
