@@ -137,7 +137,7 @@ app.use(cors({
   origin: [
     'http://localhost:8081',
     'https://seu-projeto.vercel.app',
-    'https://seu-dominio.com'
+    'https://guidedportugal.tech'
   ],
   credentials: true
 }));

@@ -193,7 +193,7 @@ export default function Settings() {
                 name="emailFrom"
                 required
                 defaultValue={emailConfig?.emailFrom || ''}
-                placeholder="noreply@autocarros.com"
+                placeholder="noreply@guidedportugal.tech"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>

@@ -23,7 +23,7 @@ export interface EmailAlertData {
 
 export async function sendInspectionAlert(data: EmailAlertData): Promise<boolean> {
   try {
-    const emailFrom = process.env.EMAIL_FROM || 'noreply@autocarros.com';
+    const emailFrom = process.env.EMAIL_FROM || 'noreply@guidedportugal.tech';
     const emailTo = process.env.EMAIL_TO || process.env.SMTP_USER;
 
     if (!emailTo) {
@@ -117,10 +117,10 @@ export async function sendPasswordResetEmail(
   resetToken: string
 ): Promise<boolean> {
   try {
-    const emailFrom = process.env.EMAIL_FROM || 'noreply@autocarros.com';
+    const emailFrom = process.env.EMAIL_FROM || 'noreply@guidedportugal.tech';
     const resetUrl = process.env.FRONTEND_URL 
       ? `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`
-      : `http://localhost:8081/reset-password?token=${resetToken}`;
+      : `https://guidedportugal.tech/reset-password?token=${resetToken}`;
 
     const subject = 'Redefinição de Password - Dashboard Autocarros';
 
