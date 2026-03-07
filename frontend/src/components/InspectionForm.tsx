@@ -10,6 +10,7 @@ interface InspectionFormProps {
     type: InspectionType;
     lastInspectionDate: string;
     nextInspectionDate?: string | null;
+    mileage?: number | null;
     notes?: string | null;
   }) => void;
   onCancel: () => void;
@@ -50,6 +51,9 @@ export default function InspectionForm({
       ? new Date(inspection.nextInspectionDate).toISOString().split('T')[0]
       : ''
   );
+  const [mileage, setMileage] = useState<string>(
+    inspection?.mileage ? inspection.mileage.toString() : ''
+  );
   const [notes, setNotes] = useState(inspection?.notes || '');
 
   useEffect(() => {
@@ -68,6 +72,7 @@ export default function InspectionForm({
       type: inspectionType,
       lastInspectionDate,
       nextInspectionDate: nextInspectionDate || null,
+      mileage: mileage ? parseInt(mileage, 10) : null,
       notes: notes || null,
     });
   };
@@ -83,17 +88,33 @@ export default function InspectionForm({
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data da Última Inspeção *
-            </label>
-            <input
-              type="date"
-              value={lastInspectionDate}
-              onChange={(e) => setLastInspectionDate(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+          <div className={`${inspectionType === InspectionType.PNEUS ? 'grid grid-cols-2 gap-4' : ''}`}>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Data da Última Inspeção *
+              </label>
+              <input
+                type="date"
+                value={lastInspectionDate}
+                onChange={(e) => setLastInspectionDate(e.target.value)}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            {inspectionType === InspectionType.PNEUS && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Quilometragem
+                </label>
+                <input
+                  type="number"
+                  value={mileage}
+                  onChange={(e) => setMileage(e.target.value)}
+                  placeholder="Ex: 150000"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
           </div>
 
           <div>

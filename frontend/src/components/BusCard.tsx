@@ -37,7 +37,7 @@ function getInspectionStatus(inspection: Inspection | undefined): {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const nextDate = new Date(inspection.nextInspectionDate);
   nextDate.setHours(0, 0, 0, 0);
 
@@ -129,9 +129,16 @@ export default function BusCard({ bus, onEdit, onDelete, onInspectionClick, onMi
                 </span>
                 {inspection ? (
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-gray-500">
-                      {new Date(inspection.lastInspectionDate).toLocaleDateString('pt-PT')}
-                    </span>
+                    <div className="flex flex-col items-end">
+                      <span className="text-xs text-gray-500">
+                        {new Date(inspection.lastInspectionDate).toLocaleDateString('pt-PT')}
+                      </span>
+                      {type === InspectionType.PNEUS && inspection.mileage && (
+                        <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1 rounded">
+                          {inspection.mileage.toLocaleString('pt-PT')} km
+                        </span>
+                      )}
+                    </div>
                     <AlertBadge status={status} daysUntilDue={daysUntilDue} type={type} />
                   </div>
                 ) : (

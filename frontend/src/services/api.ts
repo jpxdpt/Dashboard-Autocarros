@@ -95,6 +95,7 @@ export interface Inspection {
   type: InspectionType;
   lastInspectionDate: string;
   nextInspectionDate: string | null;
+  mileage: number | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -140,11 +141,13 @@ export const inspectionsApi = {
     type: InspectionType;
     lastInspectionDate: string;
     nextInspectionDate?: string | null;
+    mileage?: number | null;
     notes?: string | null;
   }) => api.post<Inspection>('/inspections', data),
   update: (id: string, data: {
     lastInspectionDate?: string;
     nextInspectionDate?: string | null;
+    mileage?: number | null;
     notes?: string | null;
   }) => api.put<Inspection>(`/inspections/${id}`, data),
   delete: (id: string) => api.delete(`/inspections/${id}`),

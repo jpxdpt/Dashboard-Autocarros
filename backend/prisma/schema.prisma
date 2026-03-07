@@ -105,6 +105,7 @@ model Inspection {
   type               InspectionType
   lastInspectionDate DateTime
   nextInspectionDate DateTime?
+  mileage            Int?            // Quilometragem no momento da inspeção
   notes              String?
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt

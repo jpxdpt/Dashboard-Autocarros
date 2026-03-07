@@ -37,7 +37,7 @@ function getInspectionStatus(inspection: Inspection | undefined): {
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  
+
   const nextDate = new Date(inspection.nextInspectionDate);
   nextDate.setHours(0, 0, 0, 0);
 
@@ -112,9 +112,14 @@ export default function BusTable({ buses, onEdit, onDelete, onInspectionClick, o
                         {inspection ? (
                           <div
                             onClick={() => onInspectionClick(bus, type)}
-                            className="cursor-pointer inline-block"
+                            className="cursor-pointer inline-flex flex-col items-center gap-1"
                           >
                             <AlertBadge status={status} daysUntilDue={daysUntilDue} type={type} />
+                            {type === InspectionType.PNEUS && inspection.mileage && (
+                              <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1 rounded">
+                                {inspection.mileage.toLocaleString('pt-PT')} km
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <span

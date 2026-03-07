@@ -15,12 +15,14 @@ const inspectionSchema = z.object({
   }),
   lastInspectionDate: z.string().transform((str) => new Date(str)),
   nextInspectionDate: z.string().transform((str) => new Date(str)).optional().nullable(),
+  mileage: z.number().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 
 const updateInspectionSchema = z.object({
   lastInspectionDate: z.string().transform((str) => new Date(str)).optional(),
   nextInspectionDate: z.string().transform((str) => new Date(str)).optional().nullable(),
+  mileage: z.number().optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 
@@ -145,7 +147,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
     // Calcular próxima inspeção se não fornecida
     const interval = INSPECTION_INTERVALS[validatedData.type];
-    const nextDate = validatedData.nextInspectionDate || 
+    const nextDate = validatedData.nextInspectionDate ||
       new Date(validatedData.lastInspectionDate.getTime() + interval * 24 * 60 * 60 * 1000);
 
     const inspection = await prisma.inspection.create({
@@ -154,6 +156,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         type: validatedData.type,
         lastInspectionDate: validatedData.lastInspectionDate,
         nextInspectionDate: nextDate,
+        mileage: validatedData.mileage,
         notes: validatedData.notes,
       },
       include: {
@@ -233,6 +236,7 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
       data: {
         ...(validatedData.lastInspectionDate && { lastInspectionDate: validatedData.lastInspectionDate }),
         ...(nextInspectionDate !== undefined && { nextInspectionDate }),
+        ...(validatedData.mileage !== undefined && { mileage: validatedData.mileage }),
         ...(validatedData.notes !== undefined && { notes: validatedData.notes }),
       },
       include: {
