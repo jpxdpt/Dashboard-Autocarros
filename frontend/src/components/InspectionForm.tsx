@@ -23,6 +23,7 @@ const INSPECTION_LABELS: Record<InspectionType, string> = {
   LICENCAS_TCC: 'Licenças TCC',
   LICENCAS_COMUNITARIAS: 'Licenças Comunitárias',
   INSPECOES: 'Inspeções',
+  INSPECOES_EXTRAORDINARIAS: 'Inspeções Extraordinárias',
 };
 
 const INSPECTION_INTERVALS: Record<InspectionType, number> = {
@@ -32,6 +33,7 @@ const INSPECTION_INTERVALS: Record<InspectionType, number> = {
   LICENCAS_TCC: 365,
   LICENCAS_COMUNITARIAS: 365,
   INSPECOES: 365,
+  INSPECOES_EXTRAORDINARIAS: 365,
 };
 
 export default function InspectionForm({

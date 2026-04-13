@@ -22,6 +22,7 @@ const INSPECTION_LABELS: Record<InspectionType, string> = {
   LICENCAS_TCC: 'Licenças TCC',
   LICENCAS_COMUNITARIAS: 'Licenças Comunitárias',
   INSPECOES: 'Inspeções',
+  INSPECOES_EXTRAORDINARIAS: 'Inspeções Extraordinárias',
 };
 
 const COLORS = {

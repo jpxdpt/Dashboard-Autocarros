@@ -112,6 +112,7 @@ export enum InspectionType {
   LICENCAS_TCC = 'LICENCAS_TCC',
   LICENCAS_COMUNITARIAS = 'LICENCAS_COMUNITARIAS',
   INSPECOES = 'INSPECOES',
+  INSPECOES_EXTRAORDINARIAS = 'INSPECOES_EXTRAORDINARIAS',
 }
 
 export interface InspectionWithStatus extends Inspection {

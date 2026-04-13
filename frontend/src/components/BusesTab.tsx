@@ -150,6 +150,7 @@ export default function BusesTab({
                 <option value={InspectionType.LICENCAS_TCC}>Licenças TCC</option>
                 <option value={InspectionType.LICENCAS_COMUNITARIAS}>Licenças Comunitárias</option>
                 <option value={InspectionType.INSPECOES}>Inspeções</option>
+                <option value={InspectionType.INSPECOES_EXTRAORDINARIAS}>Inspeções Extraordinárias</option>
               </select>
             </div>
           </div>

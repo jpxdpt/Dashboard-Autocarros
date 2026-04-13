@@ -97,6 +97,7 @@ enum InspectionType {
   LICENCAS_TCC
   LICENCAS_COMUNITARIAS
   INSPECOES
+  INSPECOES_EXTRAORDINARIAS
 }
 
 model Inspection {

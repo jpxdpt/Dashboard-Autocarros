@@ -16,6 +16,7 @@ const INSPECTION_TYPES: InspectionType[] = [
   InspectionType.LICENCAS_TCC,
   InspectionType.LICENCAS_COMUNITARIAS,
   InspectionType.INSPECOES,
+  InspectionType.INSPECOES_EXTRAORDINARIAS,
 ];
 
 const INSPECTION_LABELS: Record<InspectionType, string> = {
@@ -25,6 +26,7 @@ const INSPECTION_LABELS: Record<InspectionType, string> = {
   LICENCAS_TCC: 'Licenças TCC',
   LICENCAS_COMUNITARIAS: 'Licenças Comunitárias',
   INSPECOES: 'Inspeções',
+  INSPECOES_EXTRAORDINARIAS: 'Inspeções Extraordinárias',
 };
 
 function getInspectionStatus(inspection: Inspection | undefined): {

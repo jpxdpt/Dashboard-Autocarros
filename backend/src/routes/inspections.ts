@@ -34,6 +34,7 @@ const INSPECTION_INTERVALS: Record<InspectionType, number> = {
   LICENCAS_TCC: 365, // 1 ano
   LICENCAS_COMUNITARIAS: 365, // 1 ano
   INSPECOES: 365, // 1 ano
+  INSPECOES_EXTRAORDINARIAS: 365, // 1 ano (pode ser ajustado)
 };
 
 // Todas as rotas requerem autenticação

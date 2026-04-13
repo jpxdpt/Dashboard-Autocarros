@@ -82,6 +82,7 @@ export async function getInspectionStats(
       LICENCAS_TCC: { total: 0, ok: 0, warning: 0, expired: 0 },
       LICENCAS_COMUNITARIAS: { total: 0, ok: 0, warning: 0, expired: 0 },
       INSPECOES: { total: 0, ok: 0, warning: 0, expired: 0 },
+      INSPECOES_EXTRAORDINARIAS: { total: 0, ok: 0, warning: 0, expired: 0 },
     },
   };
 
@@ -273,6 +274,7 @@ export async function generatePDFReport(
         LICENCAS_TCC: 'Licenças TCC',
         LICENCAS_COMUNITARIAS: 'Licenças Comunitárias',
         INSPECOES: 'Inspeções',
+        INSPECOES_EXTRAORDINARIAS: 'Inspeções Extraordinárias',
       };
 
       buses.forEach((bus, busIndex) => {
@@ -583,6 +585,7 @@ export async function generateExcelReport(
     LICENCAS_TCC: 'Licenças TCC',
     LICENCAS_COMUNITARIAS: 'Licenças Comunitárias',
     INSPECOES: 'Inspeções',
+    INSPECOES_EXTRAORDINARIAS: 'Inspeções Extraordinárias',
   };
 
   buses.forEach((bus, busIndex) => {
