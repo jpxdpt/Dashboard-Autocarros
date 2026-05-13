@@ -18,9 +18,9 @@ function ScheduleManagement() {
   const [companyName, setCompanyName] = useState('');
 
   useEffect(() => {
-    const user = authService.getUser();
-    if (user?.companyName) {
-      setCompanyName(user.companyName);
+    const company = authService.getCompany();
+    if (company?.name) {
+      setCompanyName(company.name);
     }
     loadData();
   }, [selectedDate]);
