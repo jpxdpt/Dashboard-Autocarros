@@ -41,6 +41,7 @@ model Company {
   documents         Document[]
   costs             Cost[]
   emailConfig       EmailConfig?
+  schedules         Schedule[]
 
   @@map("companies")
 }
@@ -85,6 +86,7 @@ model Bus {
   driverAssignments DriverAssignment[]
   documents         Document[]
   costs             Cost[]
+  schedules         Schedule[]
 
   @@unique([companyId, matricula])
   @@map("buses")
@@ -195,6 +197,7 @@ model Driver {
   company         Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
   licenses        DriverLicense[]
   assignments     DriverAssignment[]
+  schedules       Schedule[]
 
   @@unique([companyId, licenseNumber])
   @@map("drivers")
