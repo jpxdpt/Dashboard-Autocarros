@@ -180,8 +180,19 @@ router.post('/bulk', authenticate, async (req: AuthRequest, res) => {
       }
     }
 
-    const created = await prisma.schedule.createManyAndReturn({
+    const created = await prisma.schedule.createMany({
       data: validatedSchedules,
+    });
+
+    const firstDate = validatedSchedules[0]?.date;
+    const schedules = await prisma.schedule.findMany({
+      where: {
+        companyId,
+        date: {
+          gte: new Date(firstDate.toISOString().split('T')[0] + 'T00:00:00'),
+          lt: new Date(firstDate.toISOString().split('T')[0] + 'T23:59:59'),
+        },
+      },
       include: {
         driver: {
           select: {
@@ -201,7 +212,7 @@ router.post('/bulk', authenticate, async (req: AuthRequest, res) => {
       },
     });
 
-    res.status(201).json(created);
+    res.status(201).json(schedules);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
