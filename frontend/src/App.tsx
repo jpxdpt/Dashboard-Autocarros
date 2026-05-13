@@ -4,6 +4,7 @@ import Dashboard from './components/Dashboard';
 import Reports from './components/Reports';
 import Login from './components/Login';
 import Register from './components/Register';
+import ScheduleManagement from './components/ScheduleManagement';
 import { authService } from './services/auth';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -76,6 +77,12 @@ function AppLayout({ children }: { children: React.ReactNode }) {
               >
                 Relatórios
               </Link>
+              <Link
+                to="/schedules"
+                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Escalas
+              </Link>
             </div>
             <div className="flex items-center gap-4">
               {authService.getUser() && (
@@ -120,6 +127,16 @@ function App() {
             <PrivateRoute>
               <AppLayout>
                 <Reports />
+              </AppLayout>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/schedules"
+          element={
+            <PrivateRoute>
+              <AppLayout>
+                <ScheduleManagement />
               </AppLayout>
             </PrivateRoute>
           }

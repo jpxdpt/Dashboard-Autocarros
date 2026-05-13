@@ -308,3 +308,22 @@ model EmailConfig {
   @@map("email_configs")
 }
 
+// Escalas Diárias
+model Schedule {
+  id          String   @id @default(uuid())
+  companyId   String
+  date        DateTime // Data da escala
+  driverId    String   // Condutor atribuído
+  busId       String   // Autocarro atribuído
+  service     String   // Serviço a realizar
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  bus         Bus      @relation(fields: [busId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, date])
+  @@index([driverId])
+  @@map("schedules")
+}
+

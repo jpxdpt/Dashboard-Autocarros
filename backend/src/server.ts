@@ -10,6 +10,7 @@ import reportsRoutes from './routes/reports';
 import mileageRoutes from './routes/mileage';
 import driversRoutes from './routes/drivers';
 import settingsRoutes from './routes/settings';
+import schedulesRoutes from './routes/schedules';
 import { checkAndSendAlerts } from './services/alertService';
 import { verifyEmailConfig } from './services/emailService';
 
@@ -49,6 +50,7 @@ app.use('/api/reports', reportsRoutes);
 app.use('/api/mileage', mileageRoutes);
 app.use('/api/drivers', driversRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/schedules', schedulesRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
