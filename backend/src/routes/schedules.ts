@@ -149,13 +149,13 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
 router.post('/bulk', authenticate, async (req: AuthRequest, res) => {
   try {
     const companyId = req.companyId!;
-    const { schedules } = req.body;
+    const { schedules: schedulesInput } = req.body;
 
-    if (!Array.isArray(schedules) || schedules.length === 0) {
+    if (!Array.isArray(schedulesInput) || schedulesInput.length === 0) {
       return res.status(400).json({ error: 'Array de escalas inválido' });
     }
 
-    const validatedSchedules = schedules.map((s: any) => {
+    const validatedSchedules = schedulesInput.map((s: any) => {
       const parsed = scheduleSchema.parse(s);
       return {
         ...parsed,
