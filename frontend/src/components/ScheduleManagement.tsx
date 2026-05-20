@@ -15,12 +15,12 @@ function ScheduleManagement() {
   const [formEntries, setFormEntries] = useState<ScheduleInput[]>([
     { date: new Date().toISOString().split('T')[0], driverId: '', busId: '', service: '' }
   ]);
-  const [companyName, setCompanyName] = useState('');
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    const company = authService.getCompany();
-    if (company?.name) {
-      setCompanyName(company.name);
+    const user = authService.getUser();
+    if (user?.name) {
+      setUserName(user.name);
     }
     loadData();
   }, [selectedDate]);
@@ -135,7 +135,7 @@ function ScheduleManagement() {
       <body>
         <div class="header">
           <h1>Escala de Serviço</h1>
-          <div class="date">${companyName || 'Empresa'} - ${formattedDate}</div>
+          <div class="date">${userName || 'Utilizador'} - ${formattedDate}</div>
         </div>
         <table>
           <thead>
