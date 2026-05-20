@@ -368,6 +368,33 @@ router.post('/change-password', authenticate, async (req: AuthRequest, res: Resp
   }
 });
 
+// PUT /api/auth/profile - Atualizar perfil do utilizador
+router.put('/profile', authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Não autenticado' });
+    }
+
+    const { name } = z.object({
+      name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+    }).parse(req.body);
+
+    const user = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { name },
+      select: { id: true, email: true, name: true, role: true, companyId: true },
+    });
+
+    res.json({ user });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
+    }
+    console.error('Erro ao atualizar perfil:', error);
+    res.status(500).json({ error: 'Erro ao atualizar perfil' });
+  }
+});
+
 // GET /api/auth/me - Obter utilizador atual
 router.get('/me', authenticate, async (req: AuthRequest, res: Response) => {
   try {

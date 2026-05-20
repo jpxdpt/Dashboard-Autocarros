@@ -169,6 +169,20 @@ export const authService = {
     }
   },
 
+  // Atualizar nome do utilizador
+  updateProfile: async (name: string): Promise<User> => {
+    const token = authService.getToken();
+    if (!token) throw new Error('Não autenticado');
+
+    const response = await axios.put<{ user: User }>(`${API_URL}/auth/profile`, { name }, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    const updatedUser = response.data.user;
+    localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
+    return updatedUser;
+  },
+
   // Renovar token
   refreshToken: async (): Promise<{ accessToken: string; refreshToken: string }> => {
     const refreshToken = authService.getRefreshToken();

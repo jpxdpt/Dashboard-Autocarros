@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { settingsApi, EmailConfig } from '../services/settingsApi';
+import { authService } from '../services/auth';
 import { useToast } from '../hooks/useToast';
 
 export default function Settings() {
@@ -7,9 +8,13 @@ export default function Settings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [userName, setUserName] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
   const { success, error } = useToast();
 
   useEffect(() => {
+    const user = authService.getUser();
+    if (user?.name) setUserName(user.name);
     loadConfig();
   }, []);
 
@@ -83,11 +88,52 @@ export default function Settings() {
     );
   }
 
+  const handleSaveProfile = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!userName.trim()) return;
+    try {
+      setSavingProfile(true);
+      await authService.updateProfile(userName.trim());
+      success('Nome atualizado com sucesso!');
+    } catch (err: any) {
+      error(err.response?.data?.error || 'Erro ao atualizar nome');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-gray-900">Configurações</h2>
         <p className="text-gray-600 mt-1">Gerir configurações do sistema</p>
+      </div>
+
+      {/* Perfil do Utilizador */}
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <h3 className="text-xl font-semibold text-gray-900 mb-4">Perfil do Utilizador</h3>
+        <form onSubmit={handleSaveProfile} className="flex items-end gap-4">
+          <div className="flex-1 max-w-sm">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Nome do Utilizador
+            </label>
+            <input
+              type="text"
+              value={userName}
+              onChange={(e) => setUserName(e.target.value)}
+              required
+              minLength={2}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={savingProfile}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {savingProfile ? 'A guardar...' : 'Guardar'}
+          </button>
+        </form>
       </div>
 
       {/* Configurações de Email */}
