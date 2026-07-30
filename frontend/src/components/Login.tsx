@@ -105,6 +105,13 @@ export default function Login({ onLoginSuccess }: LoginProps) {
               {loading ? 'A entrar...' : 'Entrar'}
             </button>
           </div>
+          <div className="flex items-center justify-between">
+            <div className="text-sm">
+              <Link to="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                Esqueceu-se da password?
+              </Link>
+            </div>
+          </div>
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Não tem conta?{' '}

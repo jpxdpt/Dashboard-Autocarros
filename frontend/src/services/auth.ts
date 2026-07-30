@@ -183,6 +183,18 @@ export const authService = {
     return updatedUser;
   },
 
+  // Pedido de redefinição de password
+  forgotPassword: async (email: string): Promise<{ message: string }> => {
+    const response = await axios.post<{ message: string }>(`${API_URL}/auth/forgot-password`, { email });
+    return response.data;
+  },
+
+  // Redefinir password com token
+  resetPassword: async (token: string, newPassword: string): Promise<{ message: string }> => {
+    const response = await axios.post<{ message: string }>(`${API_URL}/auth/reset-password`, { token, newPassword });
+    return response.data;
+  },
+
   // Renovar token
   refreshToken: async (): Promise<{ accessToken: string; refreshToken: string }> => {
     const refreshToken = authService.getRefreshToken();

@@ -4,6 +4,8 @@ import Dashboard from './components/Dashboard';
 import Reports from './components/Reports';
 import Login from './components/Login';
 import Register from './components/Register';
+import ForgotPassword from './components/ForgotPassword';
+import ResetPassword from './components/ResetPassword';
 import ScheduleManagement from './components/ScheduleManagement';
 import { authService } from './services/auth';
 
@@ -111,6 +113,8 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           path="/"
           element={
