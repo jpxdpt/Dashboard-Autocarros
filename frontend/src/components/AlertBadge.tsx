@@ -1,4 +1,5 @@
 import { InspectionType } from '../services/api';
+import Badge from './ui/Badge';
 
 interface AlertBadgeProps {
   status: 'ok' | 'warning' | 'expired';
@@ -17,53 +18,21 @@ const INSPECTION_LABELS: Record<InspectionType, string> = {
 };
 
 export default function AlertBadge({ status, daysUntilDue, type }: AlertBadgeProps) {
-  const getStatusConfig = () => {
-    switch (status) {
-      case 'expired':
-        return {
-          bg: 'bg-red-100',
-          text: 'text-red-800',
-          border: 'border-red-300',
-          icon: '⚠️',
-          label: 'Expirado',
-        };
-      case 'warning':
-        return {
-          bg: 'bg-yellow-100',
-          text: 'text-yellow-800',
-          border: 'border-yellow-300',
-          icon: '⏰',
-          label: 'Próximo',
-        };
-      default:
-        return {
-          bg: 'bg-green-100',
-          text: 'text-green-800',
-          border: 'border-green-300',
-          icon: '✓',
-          label: 'OK',
-        };
-    }
-  };
+  const tone = status === 'expired' ? 'red' : status === 'warning' ? 'orange' : 'green';
+  const label = status === 'expired' ? 'Expirado' : status === 'warning' ? 'Próximo' : 'OK';
 
-  const config = getStatusConfig();
-  const daysText = daysUntilDue !== null 
-    ? daysUntilDue < 0 
+  const daysText = daysUntilDue !== null
+    ? daysUntilDue < 0
       ? `${Math.abs(daysUntilDue)} dias atrás`
       : `${daysUntilDue} dias`
     : 'N/A';
 
   return (
-    <div
-      className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border ${config.bg} ${config.text} ${config.border} text-sm font-medium`}
-      title={`${INSPECTION_LABELS[type]}: ${config.label} (${daysText})`}
-    >
-      <span>{config.icon}</span>
-      <span>{INSPECTION_LABELS[type]}</span>
-      <span className="text-xs opacity-75">({daysText})</span>
-    </div>
+    <span title={`${INSPECTION_LABELS[type]}: ${label} (${daysText})`}>
+      <Badge tone={tone}>
+        {INSPECTION_LABELS[type]}
+        <span className="opacity-70 font-medium">({daysText})</span>
+      </Badge>
+    </span>
   );
 }
-
-
-

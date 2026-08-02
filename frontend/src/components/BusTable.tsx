@@ -1,5 +1,6 @@
 import { Bus, InspectionType, Inspection } from '../services/api';
 import AlertBadge from './AlertBadge';
+import Card from './ui/Card';
 
 interface BusTableProps {
   buses: Bus[];
@@ -61,47 +62,47 @@ export default function BusTable({ buses, onEdit, onDelete, onInspectionClick, o
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+    <Card className="overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
+        <table className="min-w-full">
+          <thead className="bg-surface-2">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-left footnote uppercase tracking-wider">
                 Matrícula
               </th>
               {INSPECTION_TYPES.map((type) => (
                 <th
                   key={type}
-                  className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-4 py-3 text-center footnote uppercase tracking-wider"
                 >
                   {INSPECTION_LABELS[type]}
                 </th>
               ))}
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className="px-6 py-3 text-right footnote uppercase tracking-wider">
                 Ações
               </th>
             </tr>
           </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
+          <tbody>
             {buses.length === 0 ? (
               <tr>
-                <td colSpan={INSPECTION_TYPES.length + 2} className="px-6 py-8 text-center text-gray-500">
+                <td colSpan={INSPECTION_TYPES.length + 2} className="px-6 py-8 text-center footnote">
                   Nenhum autocarro registado
                 </td>
               </tr>
             ) : (
               buses.map((bus) => (
-                <tr key={bus.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={bus.id} className="border-t border-separator hover:bg-fill transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-semibold text-gray-900">{bus.matricula}</div>
+                    <div className="text-[14px] font-semibold text-label">{bus.matricula}</div>
                     {bus.currentMileage !== null && bus.currentMileage !== undefined && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        📊 {bus.currentMileage.toLocaleString('pt-PT')} km
+                      <div className="footnote mt-0.5">
+                        {bus.currentMileage.toLocaleString('pt-PT')} km
                       </div>
                     )}
                     {bus.driverAssignments && bus.driverAssignments.length > 0 && (
-                      <div className="text-xs text-gray-500 mt-1">
-                        👤 {bus.driverAssignments.map(a => a.driver.name).join(', ')}
+                      <div className="footnote mt-0.5">
+                        {bus.driverAssignments.map(a => a.driver.name).join(', ')}
                       </div>
                     )}
                   </td>
@@ -118,7 +119,7 @@ export default function BusTable({ buses, onEdit, onDelete, onInspectionClick, o
                           >
                             <AlertBadge status={status} daysUntilDue={daysUntilDue} type={type} />
                             {type === InspectionType.PNEUS && inspection.mileage && (
-                              <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1 rounded">
+                              <span className="text-[11px] font-medium text-accent">
                                 {inspection.mileage.toLocaleString('pt-PT')} km
                               </span>
                             )}
@@ -126,7 +127,7 @@ export default function BusTable({ buses, onEdit, onDelete, onInspectionClick, o
                         ) : (
                           <span
                             onClick={() => onInspectionClick(bus, type)}
-                            className="text-xs text-gray-400 italic cursor-pointer hover:text-gray-600"
+                            className="text-[12px] text-label-tertiary italic cursor-pointer hover:text-label-secondary"
                           >
                             Não registado
                           </span>
@@ -134,25 +135,25 @@ export default function BusTable({ buses, onEdit, onDelete, onInspectionClick, o
                       </td>
                     );
                   })}
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-[13px] font-medium">
                     {onMileageClick && (
                       <button
                         onClick={() => onMileageClick(bus)}
-                        className="text-green-600 hover:text-green-900 mr-4"
+                        className="text-[var(--green)] hover:opacity-75 mr-4 active:scale-95 transition-all duration-100"
                         title="Gestão de Quilometragem"
                       >
-                        📊 KM
+                        KM
                       </button>
                     )}
                     <button
                       onClick={() => onEdit(bus)}
-                      className="text-blue-600 hover:text-blue-900 mr-4"
+                      className="text-accent hover:opacity-75 mr-4 active:scale-95 transition-all duration-100"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => onDelete(bus.id)}
-                      className="text-red-600 hover:text-red-900"
+                      className="text-[var(--red)] hover:opacity-75 active:scale-95 transition-all duration-100"
                     >
                       Remover
                     </button>
@@ -163,7 +164,6 @@ export default function BusTable({ buses, onEdit, onDelete, onInspectionClick, o
           </tbody>
         </table>
       </div>
-    </div>
+    </Card>
   );
 }
-

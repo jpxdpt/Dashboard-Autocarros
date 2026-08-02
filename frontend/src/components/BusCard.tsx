@@ -1,5 +1,7 @@
 import { Bus, InspectionType, Inspection } from '../services/api';
 import AlertBadge from './AlertBadge';
+import Card from './ui/Card';
+import Badge from './ui/Badge';
 
 interface BusCardProps {
   bus: Bus;
@@ -61,50 +63,47 @@ export default function BusCard({ bus, onEdit, onDelete, onInspectionClick, onMi
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-6">
+    <Card className="hover:shadow-sheet transition-all duration-200 active:scale-[0.99] p-6">
       <div className="flex justify-between items-start mb-4">
         <div className="flex-1">
-          <h3 className="text-2xl font-bold text-gray-800">{bus.matricula}</h3>
+          <h3 className="title-2">{bus.matricula}</h3>
           {bus.currentMileage !== null && bus.currentMileage !== undefined && (
-            <p className="text-sm text-gray-600 mt-1">
-              📊 {bus.currentMileage.toLocaleString('pt-PT')} km
+            <p className="footnote mt-1">
+              {bus.currentMileage.toLocaleString('pt-PT')} km
             </p>
           )}
           {bus.driverAssignments && bus.driverAssignments.length > 0 && (
             <div className="mt-2">
-              <p className="text-xs text-gray-500 mb-1">Condutores:</p>
+              <p className="footnote mb-1">Condutores:</p>
               <div className="flex flex-wrap gap-1">
                 {bus.driverAssignments.map((assignment) => (
-                  <span
-                    key={assignment.id}
-                    className="inline-block px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded"
-                  >
-                    👤 {assignment.driver.name}
-                  </span>
+                  <Badge key={assignment.id} tone="blue">
+                    {assignment.driver.name}
+                  </Badge>
                 ))}
               </div>
             </div>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1">
           {onMileageClick && (
             <button
               onClick={() => onMileageClick(bus)}
-              className="px-3 py-1.5 text-sm font-medium text-green-600 hover:text-green-800 hover:bg-green-50 rounded-md transition-colors"
+              className="px-2.5 py-1.5 text-[13px] font-medium text-[var(--green)] hover:bg-fill rounded-lg transition-all duration-100 active:scale-95"
               title="Gestão de Quilometragem"
             >
-              📊 KM
+              KM
             </button>
           )}
           <button
             onClick={() => onEdit(bus)}
-            className="px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+            className="px-2.5 py-1.5 text-[13px] font-medium text-accent hover:bg-fill rounded-lg transition-all duration-100 active:scale-95"
           >
             Editar
           </button>
           <button
             onClick={() => onDelete(bus.id)}
-            className="px-3 py-1.5 text-sm font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
+            className="px-2.5 py-1.5 text-[13px] font-medium text-[var(--red)] hover:bg-fill rounded-lg transition-all duration-100 active:scale-95"
           >
             Remover
           </button>
@@ -112,7 +111,7 @@ export default function BusCard({ bus, onEdit, onDelete, onInspectionClick, onMi
       </div>
 
       <div className="space-y-3">
-        <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide">
+        <h4 className="footnote uppercase tracking-wide font-semibold">
           Inspeções
         </h4>
         <div className="grid grid-cols-1 gap-2">
@@ -124,19 +123,19 @@ export default function BusCard({ bus, onEdit, onDelete, onInspectionClick, onMi
               <div
                 key={type}
                 onClick={() => onInspectionClick(bus, type)}
-                className="flex items-center justify-between p-3 bg-gray-50 hover:bg-gray-100 rounded-lg cursor-pointer transition-colors"
+                className="flex items-center justify-between p-3 bg-surface-2 hover:bg-fill rounded-xl cursor-pointer transition-colors"
               >
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-[14px] font-medium text-label">
                   {INSPECTION_LABELS[type]}
                 </span>
                 {inspection ? (
                   <div className="flex items-center gap-3">
                     <div className="flex flex-col items-end">
-                      <span className="text-xs text-gray-500">
+                      <span className="footnote">
                         {new Date(inspection.lastInspectionDate).toLocaleDateString('pt-PT')}
                       </span>
                       {type === InspectionType.PNEUS && inspection.mileage && (
-                        <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-1 rounded">
+                        <span className="text-[11px] font-medium text-accent">
                           {inspection.mileage.toLocaleString('pt-PT')} km
                         </span>
                       )}
@@ -144,14 +143,13 @@ export default function BusCard({ bus, onEdit, onDelete, onInspectionClick, onMi
                     <AlertBadge status={status} daysUntilDue={daysUntilDue} type={type} />
                   </div>
                 ) : (
-                  <span className="text-xs text-gray-400 italic">Não registado</span>
+                  <span className="text-[12px] text-label-tertiary italic">Não registado</span>
                 )}
               </div>
             );
           })}
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
-
