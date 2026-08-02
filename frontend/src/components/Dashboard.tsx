@@ -9,6 +9,8 @@ import BusesTab from './BusesTab';
 import Settings from './Settings';
 import { ToastContainer } from './Toast';
 import { useToast } from '../hooks/useToast';
+import Button from './ui/Button';
+import Skeleton from './ui/Skeleton';
 
 type ViewMode = 'table' | 'cards';
 type FilterStatus = 'all' | 'ok' | 'warning' | 'expired';
@@ -219,92 +221,63 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <div className="text-xl text-gray-600">A carregar autocarros...</div>
+      <div className="max-w-6xl mx-auto px-6 py-10">
+        <Skeleton className="h-9 w-64 mb-2" />
+        <Skeleton className="h-4 w-40 mb-8" />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
         </div>
+        <Skeleton className="h-64" />
       </div>
     );
   }
 
+  const tabs: { key: TabType; label: string }[] = [
+    { key: 'buses', label: 'Autocarros' },
+    { key: 'drivers', label: 'Condutores' },
+    { key: 'settings', label: 'Configurações' },
+  ];
+
   return (
     <div>
       <ToastContainer toasts={toasts} onClose={removeToast} />
-      
+
       {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Dashboard de Manutenção
-              </h1>
-              <p className="text-gray-600 mt-1">Gestão completa de autocarros e condutores</p>
-              {authService.getUser() && (
-                <p className="text-sm text-gray-500 mt-1">
-                  {authService.getUser()?.name} • {authService.getCompany()?.name}
-                </p>
-              )}
-            </div>
-            <div className="flex gap-3 items-center">
-              {activeTab === 'buses' && (
-                <button
-                  onClick={handleAddBus}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-md"
-                >
-                  + Adicionar Autocarro
-                </button>
-              )}
-              <button
-                onClick={() => authService.logout()}
-                className="px-4 py-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Sair"
-              >
-                Sair
-              </button>
-            </div>
+      <header className="max-w-6xl mx-auto px-6 pt-10 pb-6">
+        <div className="flex justify-between items-end gap-4 flex-wrap">
+          <div>
+            <h1 className="display-1">Dashboard de Manutenção</h1>
+            <p className="footnote mt-1">Gestão completa de autocarros e condutores</p>
+            {authService.getUser() && (
+              <p className="footnote mt-0.5">
+                {authService.getUser()?.name} • {authService.getCompany()?.name}
+              </p>
+            )}
           </div>
+          {activeTab === 'buses' && (
+            <Button onClick={handleAddBus}>+ Adicionar Autocarro</Button>
+          )}
+        </div>
+
+        {/* Segmented control */}
+        <div className="inline-flex p-0.5 rounded-xl bg-fill mt-6">
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`px-4 py-1.5 rounded-[10px] text-[14px] font-medium transition-all duration-150 active:scale-[0.98] ${
+                activeTab === tab.key
+                  ? 'bg-surface shadow-sm text-label'
+                  : 'text-label-secondary'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </header>
-
-      {/* Tabs Navigation */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('buses')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'buses'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Autocarros
-            </button>
-            <button
-              onClick={() => setActiveTab('drivers')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'drivers'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Condutores
-            </button>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'settings'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              ⚙️ Configurações
-            </button>
-          </nav>
-        </div>
-      </div>
 
       {/* Content based on active tab */}
       {activeTab === 'buses' ? (
@@ -331,11 +304,11 @@ export default function Dashboard() {
           }}
         />
       ) : activeTab === 'drivers' ? (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-6xl mx-auto px-6 py-8">
           <DriversManagement />
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-6xl mx-auto px-6 py-8">
           <Settings />
         </div>
       )}
