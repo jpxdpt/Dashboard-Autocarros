@@ -148,16 +148,16 @@ export default function Reports() {
   const pieData = preparePieData();
 
   return (
-    <div className="min-h-screen bg-app p-8">
+    <div className="min-h-screen bg-app p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <Card className="p-6 mb-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <div>
               <h1 className="display-1">Relatórios e Análises</h1>
               <p className="footnote mt-1">Estatísticas e exportação de dados</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Button
                 onClick={handleExportPDF}
                 disabled={exporting === 'pdf'}
@@ -177,7 +177,7 @@ export default function Reports() {
          </Card>
 
         {/* Filtros */}
-        <Card className="p-6 mb-6">
+          <Card className="p-4 sm:p-6 mb-6">
           <h2 className="title-2 mb-4">Filtros</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
@@ -233,20 +233,20 @@ export default function Reports() {
         </Card>
 
         {/* Estatísticas Gerais */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <Card className="p-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6">
+          <Card className="p-4 sm:p-6">
             <div className="text-sm font-medium text-gray-600">Total de Inspeções</div>
             <div className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</div>
           </Card>
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <div className="text-sm font-medium text-gray-600">OK</div>
             <div className="text-3xl font-bold text-green-600 mt-2">{stats.ok}</div>
           </Card>
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <div className="text-sm font-medium text-gray-600">Próximas do Vencimento</div>
             <div className="text-3xl font-bold text-yellow-600 mt-2">{stats.warning}</div>
           </Card>
-          <Card className="p-6">
+          <Card className="p-4 sm:p-6">
             <div className="text-sm font-medium text-gray-600">Expiradas</div>
             <div className="text-3xl font-bold text-red-600 mt-2">{stats.expired}</div>
           </Card>

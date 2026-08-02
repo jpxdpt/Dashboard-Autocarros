@@ -1,8 +1,12 @@
 import prisma from '../config/database';
 import { sendInspectionAlert } from './emailService';
 import { InspectionType } from '@prisma/client';
+import dotenv from 'dotenv';
 
-const ALERT_DAYS_BEFORE = parseInt(process.env.ALERT_DAYS_BEFORE || '30');
+dotenv.config();
+
+const parsedAlertDays = Number.parseInt(process.env.ALERT_DAYS_BEFORE || '30', 10);
+const ALERT_DAYS_BEFORE = Number.isFinite(parsedAlertDays) && parsedAlertDays >= 0 ? parsedAlertDays : 30;
 
 export interface InspectionStatus {
   id: string;

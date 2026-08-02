@@ -173,10 +173,10 @@ function ScheduleManagement() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-4 sm:p-6 space-y-6">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-6">
         <h1 className="title-2">Escalas Diárias</h1>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Input
             label="Data"
             type="date"
@@ -203,9 +203,9 @@ function ScheduleManagement() {
       {showForm && (
         <Card className="p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Criar Escalas para {formatDate(selectedDate)}</h2>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-x-auto">
             {formEntries.map((entry, index) => (
-              <div key={index} className="flex gap-3 items-start p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex min-w-[42rem] gap-3 items-start p-3 bg-gray-50 rounded-lg">
                 <select
                   value={entry.driverId}
                   onChange={(e) => handleEntryChange(index, 'driverId', e.target.value)}
@@ -276,7 +276,8 @@ function ScheduleManagement() {
             Clique em "Nova Escala" para criar.
           </div>
         ) : (
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[40rem]">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">#</th>
@@ -305,6 +306,7 @@ function ScheduleManagement() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
     </div>

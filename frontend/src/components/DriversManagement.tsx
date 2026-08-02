@@ -187,7 +187,7 @@ export default function DriversManagement() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <h2 className="title-2">Gestão de Condutores</h2>
         <Button
           onClick={() => {
@@ -384,7 +384,7 @@ export default function DriversManagement() {
                   <p className="text-sm text-gray-600">Carta: {driver.licenseNumber}</p>
                   <p className="text-sm text-gray-600">Categoria: {driver.licenseCategory}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <button
                     onClick={() => {
                       setEditingDriver(driver);
@@ -554,7 +554,7 @@ export default function DriversManagement() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Data de Emissão *</label>
                   <input

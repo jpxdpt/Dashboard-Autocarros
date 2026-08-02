@@ -1,17 +1,31 @@
 import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
+import prisma from '../config/database';
 
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: false,
+  host: process.env.SMTP_HOST,
+  port: parseInt(process.env.SMTP_PORT || '587', 10),
+  secure: process.env.SMTP_SECURE === 'true' || process.env.SMTP_PORT === '465',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
   },
 });
+
+function hasSmtpConfiguration(): boolean {
+  return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+}
+
+async function getAlertRecipients(): Promise<string[]> {
+  const users = await prisma.user.findMany({
+    where: { isActive: true },
+    select: { email: true },
+  });
+
+  return [...new Set(users.map(({ email }) => email.trim().toLowerCase()).filter(Boolean))];
+}
 
 export interface EmailAlertData {
   matricula: string;
@@ -23,11 +37,15 @@ export interface EmailAlertData {
 
 export async function sendInspectionAlert(data: EmailAlertData): Promise<boolean> {
   try {
+    if (!hasSmtpConfiguration()) {
+      console.error('SMTP não configurado; alerta não enviado');
+      return false;
+    }
     const emailFrom = process.env.EMAIL_FROM || 'noreply@guidedportugal.tech';
-    const emailTo = process.env.EMAIL_TO || process.env.SMTP_USER;
+    const recipients = await getAlertRecipients();
 
-    if (!emailTo) {
-      console.error('EMAIL_TO não configurado');
+    if (recipients.length === 0) {
+      console.error('Não existem contas ativas com email para receber alertas');
       return false;
     }
 
@@ -97,13 +115,13 @@ Dias até ao vencimento: ${data.daysUntilDue} dias
 
     await transporter.sendMail({
       from: emailFrom,
-      to: emailTo,
+      to: recipients,
       subject,
       text,
       html,
     });
 
-    console.log(`Email de alerta enviado para ${emailTo} sobre ${data.matricula} - ${data.inspectionType}`);
+    console.log(`Email de alerta enviado para ${recipients.length} contas sobre ${data.matricula} - ${data.inspectionType}`);
     return true;
   } catch (error) {
     console.error('Erro ao enviar email de alerta:', error);
@@ -196,6 +214,10 @@ ${resetUrl}
 
 export async function verifyEmailConfig(): Promise<boolean> {
   try {
+    if (!hasSmtpConfiguration()) {
+      console.error('SMTP não configurado: defina SMTP_HOST, SMTP_USER, SMTP_PASS e EMAIL_FROM');
+      return false;
+    }
     await transporter.verify();
     console.log('Configuração de email verificada com sucesso');
     return true;
