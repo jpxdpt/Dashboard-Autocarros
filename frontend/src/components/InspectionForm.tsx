@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Bus, InspectionType, Inspection } from '../services/api';
+import Sheet from './ui/Sheet';
+import Input from './ui/Input';
+import Button from './ui/Button';
 
 interface InspectionFormProps {
-  bus: Bus;
-  inspectionType: InspectionType;
+  open: boolean;
+  bus?: Bus;
+  inspectionType?: InspectionType;
   inspection?: Inspection;
   onSave: (data: {
     busId: string;
@@ -36,7 +40,11 @@ const INSPECTION_INTERVALS: Record<InspectionType, number> = {
   INSPECOES_EXTRAORDINARIAS: 365,
 };
 
+const textareaClasses =
+  'w-full px-3.5 py-2.5 rounded-xl bg-surface text-label border border-separator placeholder:text-label-tertiary outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 transition-shadow';
+
 export default function InspectionForm({
+  open,
   bus,
   inspectionType,
   inspection,
@@ -44,22 +52,32 @@ export default function InspectionForm({
   onCancel,
 }: InspectionFormProps) {
   const [lastInspectionDate, setLastInspectionDate] = useState(
-    inspection?.lastInspectionDate
-      ? new Date(inspection.lastInspectionDate).toISOString().split('T')[0]
-      : new Date().toISOString().split('T')[0]
+    new Date().toISOString().split('T')[0]
   );
-  const [nextInspectionDate, setNextInspectionDate] = useState(
-    inspection?.nextInspectionDate
-      ? new Date(inspection.nextInspectionDate).toISOString().split('T')[0]
-      : ''
-  );
-  const [mileage, setMileage] = useState<string>(
-    inspection?.mileage ? inspection.mileage.toString() : ''
-  );
-  const [notes, setNotes] = useState(inspection?.notes || '');
+  const [nextInspectionDate, setNextInspectionDate] = useState('');
+  const [mileage, setMileage] = useState<string>('');
+  const [notes, setNotes] = useState('');
+
+  // Reinicializar o formulário cada vez que abre
+  useEffect(() => {
+    if (open) {
+      setLastInspectionDate(
+        inspection?.lastInspectionDate
+          ? new Date(inspection.lastInspectionDate).toISOString().split('T')[0]
+          : new Date().toISOString().split('T')[0]
+      );
+      setNextInspectionDate(
+        inspection?.nextInspectionDate
+          ? new Date(inspection.nextInspectionDate).toISOString().split('T')[0]
+          : ''
+      );
+      setMileage(inspection?.mileage ? inspection.mileage.toString() : '');
+      setNotes(inspection?.notes || '');
+    }
+  }, [open, inspection]);
 
   useEffect(() => {
-    if (lastInspectionDate && !nextInspectionDate) {
+    if (lastInspectionDate && !nextInspectionDate && inspectionType) {
       const interval = INSPECTION_INTERVALS[inspectionType];
       const nextDate = new Date(lastInspectionDate);
       nextDate.setDate(nextDate.getDate() + interval);
@@ -69,6 +87,7 @@ export default function InspectionForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!bus || !inspectionType) return;
     onSave({
       busId: bus.id,
       type: inspectionType,
@@ -79,94 +98,69 @@ export default function InspectionForm({
     });
   };
 
+  const title = inspectionType
+    ? `${inspection ? 'Editar' : 'Adicionar'} Inspeção — ${INSPECTION_LABELS[inspectionType]}`
+    : 'Inspeção';
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">
-          {inspection ? 'Editar' : 'Adicionar'} Inspeção - {INSPECTION_LABELS[inspectionType]}
-        </h2>
-        <p className="text-sm text-gray-600 mb-6">
-          Autocarro: <span className="font-semibold">{bus.matricula}</span>
-        </p>
+    <Sheet open={open && !!bus && !!inspectionType} onClose={onCancel} title={title}>
+      <p className="footnote mb-4">
+        Autocarro: <span className="font-semibold text-label">{bus?.matricula}</span>
+      </p>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className={`${inspectionType === InspectionType.PNEUS ? 'grid grid-cols-2 gap-4' : ''}`}>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Data da Última Inspeção *
-              </label>
-              <input
-                type="date"
-                value={lastInspectionDate}
-                onChange={(e) => setLastInspectionDate(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            {inspectionType === InspectionType.PNEUS && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Quilometragem
-                </label>
-                <input
-                  type="number"
-                  value={mileage}
-                  onChange={(e) => setMileage(e.target.value)}
-                  placeholder="Ex: 150000"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Data da Próxima Inspeção
-            </label>
-            <input
-              type="date"
-              value={nextInspectionDate}
-              onChange={(e) => setNextInspectionDate(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className={`${inspectionType === InspectionType.PNEUS ? 'grid grid-cols-2 gap-4' : ''}`}>
+          <Input
+            type="date"
+            label="Data da Última Inspeção *"
+            value={lastInspectionDate}
+            onChange={(e) => setLastInspectionDate(e.target.value)}
+            required
+          />
+          {inspectionType === InspectionType.PNEUS && (
+            <Input
+              type="number"
+              label="Quilometragem"
+              value={mileage}
+              onChange={(e) => setMileage(e.target.value)}
+              placeholder="Ex: 150000"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Calculado automaticamente se não preenchido ({INSPECTION_INTERVALS[inspectionType]} dias)
-            </p>
-          </div>
+          )}
+        </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Notas
-            </label>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Adicione notas sobre esta inspeção..."
-            />
-          </div>
+        <div>
+          <Input
+            type="date"
+            label="Data da Próxima Inspeção"
+            value={nextInspectionDate}
+            onChange={(e) => setNextInspectionDate(e.target.value)}
+          />
+          <p className="footnote mt-1">
+            Calculado automaticamente se não preenchido
+            {inspectionType ? ` (${INSPECTION_INTERVALS[inspectionType]} dias)` : ''}
+          </p>
+        </div>
 
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              {inspection ? 'Atualizar' : 'Adicionar'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <label className="block">
+          <span className="footnote block mb-1.5">Notas</span>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            className={textareaClasses}
+            placeholder="Adicione notas sobre esta inspeção..."
+          />
+        </label>
+
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button type="submit">
+            {inspection ? 'Atualizar' : 'Adicionar'}
+          </Button>
+        </div>
+      </form>
+    </Sheet>
   );
 }
-
-
-

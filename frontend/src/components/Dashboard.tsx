@@ -313,44 +313,40 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Modals */}
-      {showMileageModal && selectedBusForMileage && (
-        <MileageManagement
-          bus={selectedBusForMileage}
-          onClose={() => {
-            setShowMileageModal(false);
-            setSelectedBusForMileage(undefined);
-            loadBuses();
-          }}
-        />
-      )}
+      {/* Sheets */}
+      <MileageManagement
+        open={showMileageModal}
+        bus={selectedBusForMileage}
+        onClose={() => {
+          setShowMileageModal(false);
+          setSelectedBusForMileage(undefined);
+          loadBuses();
+        }}
+      />
 
-      {/* Modals */}
-      {showBusForm && (
-        <BusForm
-          bus={editingBus}
-          onSave={handleSaveBus}
-          onCancel={() => {
-            setShowBusForm(false);
-            setEditingBus(undefined);
-          }}
-        />
-      )}
+      <BusForm
+        open={showBusForm}
+        bus={editingBus}
+        onSave={handleSaveBus}
+        onCancel={() => {
+          setShowBusForm(false);
+          setEditingBus(undefined);
+        }}
+      />
 
-      {showInspectionForm && selectedBus && selectedInspectionType && (
-        <InspectionForm
-          bus={selectedBus}
-          inspectionType={selectedInspectionType}
-          inspection={editingInspection}
-          onSave={handleSaveInspection}
-          onCancel={() => {
-            setShowInspectionForm(false);
-            setSelectedBus(undefined);
-            setSelectedInspectionType(undefined);
-            setEditingInspection(undefined);
-          }}
-        />
-      )}
+      <InspectionForm
+        open={showInspectionForm}
+        bus={selectedBus}
+        inspectionType={selectedInspectionType}
+        inspection={editingInspection}
+        onSave={handleSaveInspection}
+        onCancel={() => {
+          setShowInspectionForm(false);
+          setSelectedBus(undefined);
+          setSelectedInspectionType(undefined);
+          setEditingInspection(undefined);
+        }}
+      />
     </div>
   );
 }

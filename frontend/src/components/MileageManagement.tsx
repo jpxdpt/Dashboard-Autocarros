@@ -2,13 +2,20 @@ import { useState, useEffect } from 'react';
 import { Bus } from '../services/api';
 import { mileageApi, OdometerReading, MaintenanceSchedule } from '../services/mileageApi';
 import { useToast } from '../hooks/useToast';
+import Sheet from './ui/Sheet';
+import Button from './ui/Button';
+import Skeleton from './ui/Skeleton';
 
 interface MileageManagementProps {
-  bus: Bus;
+  open: boolean;
+  bus?: Bus;
   onClose: () => void;
 }
 
-export default function MileageManagement({ bus, onClose }: MileageManagementProps) {
+const fieldClasses =
+  'w-full px-3.5 py-2.5 rounded-xl bg-surface text-label border border-separator placeholder:text-label-tertiary outline-none focus:border-accent focus:ring-4 focus:ring-accent/15 transition-shadow';
+
+export default function MileageManagement({ open, bus, onClose }: MileageManagementProps) {
   const [readings, setReadings] = useState<OdometerReading[]>([]);
   const [schedules, setSchedules] = useState<MaintenanceSchedule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -18,10 +25,11 @@ export default function MileageManagement({ bus, onClose }: MileageManagementPro
   const { success, error } = useToast();
 
   useEffect(() => {
-    loadData();
-  }, [bus.id]);
+    if (open && bus) loadData();
+  }, [open, bus?.id]);
 
   const loadData = async () => {
+    if (!bus) return;
     try {
       setLoading(true);
       const [readingsRes, schedulesRes] = await Promise.all([
@@ -39,6 +47,7 @@ export default function MileageManagement({ bus, onClose }: MileageManagementPro
 
   const handleAddReading = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!bus) return;
     const formData = new FormData(e.currentTarget);
     const mileage = parseInt(formData.get('mileage') as string);
     const readingDate = formData.get('readingDate') as string;
@@ -61,15 +70,16 @@ export default function MileageManagement({ bus, onClose }: MileageManagementPro
 
   const handleSaveSchedule = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!bus) return;
     const formData = new FormData(e.currentTarget);
     const maintenanceType = formData.get('maintenanceType') as string;
     const mileageInterval = parseInt(formData.get('mileageInterval') as string);
-    const lastMaintenanceMileage = formData.get('lastMaintenanceMileage') 
-      ? parseInt(formData.get('lastMaintenanceMileage') as string) 
+    const lastMaintenanceMileage = formData.get('lastMaintenanceMileage')
+      ? parseInt(formData.get('lastMaintenanceMileage') as string)
       : null;
     const currentMileage = bus.currentMileage || 0;
-    const nextMaintenanceMileage = lastMaintenanceMileage 
-      ? lastMaintenanceMileage + mileageInterval 
+    const nextMaintenanceMileage = lastMaintenanceMileage
+      ? lastMaintenanceMileage + mileageInterval
       : currentMileage + mileageInterval;
     const notes = formData.get('notes') as string;
 
@@ -116,288 +126,247 @@ export default function MileageManagement({ bus, onClose }: MileageManagementPro
     }
   };
 
-  const currentMileage = bus.currentMileage || 0;
+  const currentMileage = bus?.currentMileage || 0;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
+    <Sheet open={open && !!bus} onClose={onClose} title="Gestão de Quilometragem" wide>
+      <p className="footnote mb-4">
+        Autocarro: <span className="font-semibold text-label">{bus?.matricula}</span>
+        {' • '}Quilometragem atual:{' '}
+        <span className="font-semibold text-label">{currentMileage.toLocaleString('pt-PT')} km</span>
+      </p>
+
+      {loading ? (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-64" />
+          <Skeleton className="h-64" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Registos de Quilometragem */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Gestão de Quilometragem</h2>
-            <p className="text-gray-600 mt-1">Autocarro: {bus.matricula}</p>
-            <p className="text-sm text-gray-500 mt-1">
-              Quilometragem atual: <span className="font-semibold">{currentMileage.toLocaleString('pt-PT')} km</span>
-            </p>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="headline">Registos de Quilometragem</h3>
+              <Button size="sm" onClick={() => setShowReadingForm(!showReadingForm)}>
+                + Novo Registo
+              </Button>
+            </div>
+
+            {showReadingForm && (
+              <form onSubmit={handleAddReading} className="bg-surface-2 p-4 rounded-xl mb-4">
+                <div className="space-y-3">
+                  <label className="block">
+                    <span className="footnote block mb-1.5">Quilometragem (km)</span>
+                    <input
+                      type="number"
+                      name="mileage"
+                      required
+                      min={currentMileage}
+                      className={fieldClasses}
+                      placeholder="Ex: 50000"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="footnote block mb-1.5">Data do Registo</span>
+                    <input
+                      type="date"
+                      name="readingDate"
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                      className={fieldClasses}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="footnote block mb-1.5">Notas (opcional)</span>
+                    <textarea
+                      name="notes"
+                      rows={2}
+                      className={fieldClasses}
+                      placeholder="Observações..."
+                    />
+                  </label>
+                  <div className="flex justify-end gap-2">
+                    <Button type="button" variant="secondary" size="sm" onClick={() => setShowReadingForm(false)}>
+                      Cancelar
+                    </Button>
+                    <Button type="submit" size="sm">
+                      Adicionar
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            )}
+
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {readings.length === 0 ? (
+                <p className="footnote text-center py-8">Nenhum registo encontrado</p>
+              ) : (
+                readings.map((reading) => (
+                  <div key={reading.id} className="bg-surface border border-separator rounded-xl p-4">
+                    <p className="font-semibold text-label">
+                      {reading.mileage.toLocaleString('pt-PT')} km
+                    </p>
+                    <p className="footnote">
+                      {new Date(reading.readingDate).toLocaleDateString('pt-PT')}
+                    </p>
+                    {reading.notes && (
+                      <p className="footnote mt-1">{reading.notes}</p>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-2xl"
-          >
-            ×
-          </button>
-        </div>
 
-        <div className="p-6">
-          {loading ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">A carregar...</p>
+          {/* Agendas de Manutenção */}
+          <div>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="headline">Agendas de Manutenção</h3>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setEditingSchedule(undefined);
+                  setShowScheduleForm(!showScheduleForm);
+                }}
+              >
+                + Nova Agenda
+              </Button>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Registos de Quilometragem */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">Registos de Quilometragem</h3>
-                  <button
-                    onClick={() => setShowReadingForm(!showReadingForm)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium"
-                  >
-                    + Novo Registo
-                  </button>
+
+            {showScheduleForm && (
+              <form onSubmit={handleSaveSchedule} className="bg-surface-2 p-4 rounded-xl mb-4">
+                <div className="space-y-3">
+                  <label className="block">
+                    <span className="footnote block mb-1.5">Tipo de Manutenção</span>
+                    <input
+                      type="text"
+                      name="maintenanceType"
+                      required
+                      defaultValue={editingSchedule?.maintenanceType}
+                      className={fieldClasses}
+                      placeholder="Ex: Revisão 10.000km"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="footnote block mb-1.5">Intervalo (km)</span>
+                    <input
+                      type="number"
+                      name="mileageInterval"
+                      required
+                      min={1}
+                      defaultValue={editingSchedule?.mileageInterval}
+                      className={fieldClasses}
+                      placeholder="Ex: 10000"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="footnote block mb-1.5">Última Manutenção (km) — Opcional</span>
+                    <input
+                      type="number"
+                      name="lastMaintenanceMileage"
+                      min={0}
+                      defaultValue={editingSchedule?.lastMaintenanceMileage || undefined}
+                      className={fieldClasses}
+                      placeholder="Ex: 40000"
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="footnote block mb-1.5">Notas (opcional)</span>
+                    <textarea
+                      name="notes"
+                      rows={2}
+                      defaultValue={editingSchedule?.notes || undefined}
+                      className={fieldClasses}
+                      placeholder="Observações..."
+                    />
+                  </label>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setShowScheduleForm(false);
+                        setEditingSchedule(undefined);
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                    <Button type="submit" size="sm">
+                      {editingSchedule ? 'Atualizar' : 'Criar'}
+                    </Button>
+                  </div>
                 </div>
+              </form>
+            )}
 
-                {showReadingForm && (
-                  <form onSubmit={handleAddReading} className="bg-gray-50 p-4 rounded-lg mb-4">
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Quilometragem (km)
-                        </label>
-                        <input
-                          type="number"
-                          name="mileage"
-                          required
-                          min={currentMileage}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Ex: 50000"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Data do Registo
-                        </label>
-                        <input
-                          type="date"
-                          name="readingDate"
-                          defaultValue={new Date().toISOString().split('T')[0]}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Notas (opcional)
-                        </label>
-                        <textarea
-                          name="notes"
-                          rows={2}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Observações..."
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="submit"
-                          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium"
-                        >
-                          Adicionar
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => setShowReadingForm(false)}
-                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-                    </div>
-                  </form>
-                )}
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {schedules.length === 0 ? (
+                <p className="footnote text-center py-8">Nenhuma agenda encontrada</p>
+              ) : (
+                schedules.map((schedule) => {
+                  const kmRemaining = schedule.nextMaintenanceMileage - currentMileage;
+                  const isOverdue = kmRemaining < 0;
+                  const isDueSoon = kmRemaining <= 1000 && kmRemaining >= 0;
 
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {readings.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">Nenhum registo encontrado</p>
-                  ) : (
-                    readings.map((reading) => (
-                      <div key={reading.id} className="bg-white border rounded-lg p-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <p className="font-semibold text-lg text-gray-900">
-                              {reading.mileage.toLocaleString('pt-PT')} km
+                  return (
+                    <div
+                      key={schedule.id}
+                      className={`bg-surface border rounded-xl p-4 ${
+                        isOverdue
+                          ? 'border-[var(--red)]/40 bg-[var(--red)]/5'
+                          : isDueSoon
+                            ? 'border-[var(--orange)]/40 bg-[var(--orange)]/5'
+                            : 'border-separator'
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <p className="font-semibold text-label">{schedule.maintenanceType}</p>
+                          <p className="footnote mt-1">
+                            Intervalo: {schedule.mileageInterval.toLocaleString('pt-PT')} km
+                          </p>
+                          <p className="footnote">
+                            Próxima: {schedule.nextMaintenanceMileage.toLocaleString('pt-PT')} km
+                          </p>
+                          {kmRemaining < 0 ? (
+                            <p className="text-[13px] font-semibold text-[var(--red)] mt-1">
+                              Vencida há {Math.abs(kmRemaining).toLocaleString('pt-PT')} km
                             </p>
-                            <p className="text-sm text-gray-500">
-                              {new Date(reading.readingDate).toLocaleDateString('pt-PT')}
+                          ) : (
+                            <p className="text-[13px] font-semibold text-label-secondary mt-1">
+                              Restam {kmRemaining.toLocaleString('pt-PT')} km
                             </p>
-                            {reading.notes && (
-                              <p className="text-sm text-gray-600 mt-1">{reading.notes}</p>
-                            )}
-                          </div>
+                          )}
+                          {schedule.notes && (
+                            <p className="footnote mt-1">{schedule.notes}</p>
+                          )}
+                        </div>
+                        <div className="flex gap-1 ml-4">
+                          <button
+                            onClick={() => {
+                              setEditingSchedule(schedule);
+                              setShowScheduleForm(true);
+                            }}
+                            className="px-2.5 py-1.5 text-[13px] font-medium text-accent hover:bg-fill rounded-lg transition-all duration-100 active:scale-95"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => handleDeleteSchedule(schedule.id)}
+                            className="px-2.5 py-1.5 text-[13px] font-medium text-[var(--red)] hover:bg-fill rounded-lg transition-all duration-100 active:scale-95"
+                          >
+                            Remover
+                          </button>
                         </div>
                       </div>
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* Agendas de Manutenção */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-gray-900">Agendas de Manutenção</h3>
-                  <button
-                    onClick={() => {
-                      setEditingSchedule(undefined);
-                      setShowScheduleForm(!showScheduleForm);
-                    }}
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-medium"
-                  >
-                    + Nova Agenda
-                  </button>
-                </div>
-
-                {showScheduleForm && (
-                  <form onSubmit={handleSaveSchedule} className="bg-gray-50 p-4 rounded-lg mb-4">
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Tipo de Manutenção
-                        </label>
-                        <input
-                          type="text"
-                          name="maintenanceType"
-                          required
-                          defaultValue={editingSchedule?.maintenanceType}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Ex: Revisão 10.000km"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Intervalo (km)
-                        </label>
-                        <input
-                          type="number"
-                          name="mileageInterval"
-                          required
-                          min={1}
-                          defaultValue={editingSchedule?.mileageInterval}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Ex: 10000"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Última Manutenção (km) - Opcional
-                        </label>
-                        <input
-                          type="number"
-                          name="lastMaintenanceMileage"
-                          min={0}
-                          defaultValue={editingSchedule?.lastMaintenanceMileage || undefined}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Ex: 40000"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Notas (opcional)
-                        </label>
-                        <textarea
-                          name="notes"
-                          rows={2}
-                          defaultValue={editingSchedule?.notes || undefined}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Observações..."
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          type="submit"
-                          className="flex-1 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 font-medium"
-                        >
-                          {editingSchedule ? 'Atualizar' : 'Criar'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowScheduleForm(false);
-                            setEditingSchedule(undefined);
-                          }}
-                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
                     </div>
-                  </form>
-                )}
-
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {schedules.length === 0 ? (
-                    <p className="text-gray-500 text-center py-8">Nenhuma agenda encontrada</p>
-                  ) : (
-                    schedules.map((schedule) => {
-                      const kmRemaining = schedule.nextMaintenanceMileage - currentMileage;
-                      const isOverdue = kmRemaining < 0;
-                      const isDueSoon = kmRemaining <= 1000 && kmRemaining >= 0;
-
-                      return (
-                        <div
-                          key={schedule.id}
-                          className={`bg-white border rounded-lg p-4 ${
-                            isOverdue ? 'border-red-300 bg-red-50' : isDueSoon ? 'border-yellow-300 bg-yellow-50' : ''
-                          }`}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              <p className="font-semibold text-gray-900">{schedule.maintenanceType}</p>
-                              <p className="text-sm text-gray-600 mt-1">
-                                Intervalo: {schedule.mileageInterval.toLocaleString('pt-PT')} km
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                Próxima: {schedule.nextMaintenanceMileage.toLocaleString('pt-PT')} km
-                              </p>
-                              {kmRemaining < 0 ? (
-                                <p className="text-sm font-semibold text-red-600 mt-1">
-                                  Vencida há {Math.abs(kmRemaining).toLocaleString('pt-PT')} km
-                                </p>
-                              ) : (
-                                <p className="text-sm font-semibold text-gray-700 mt-1">
-                                  Restam {kmRemaining.toLocaleString('pt-PT')} km
-                                </p>
-                              )}
-                              {schedule.notes && (
-                                <p className="text-sm text-gray-500 mt-1">{schedule.notes}</p>
-                              )}
-                            </div>
-                            <div className="flex gap-2 ml-4">
-                              <button
-                                onClick={() => {
-                                  setEditingSchedule(schedule);
-                                  setShowScheduleForm(true);
-                                }}
-                                className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                onClick={() => handleDeleteSchedule(schedule.id)}
-                                className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
-                              >
-                                Remover
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
+                  );
+                })
+              )}
             </div>
-          )}
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </Sheet>
   );
 }
-

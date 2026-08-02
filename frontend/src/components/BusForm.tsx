@@ -1,14 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Bus } from '../services/api';
+import Sheet from './ui/Sheet';
+import Input from './ui/Input';
+import Button from './ui/Button';
 
 interface BusFormProps {
+  open: boolean;
   bus?: Bus;
   onSave: (matricula: string) => void;
   onCancel: () => void;
 }
 
-export default function BusForm({ bus, onSave, onCancel }: BusFormProps) {
+export default function BusForm({ open, bus, onSave, onCancel }: BusFormProps) {
   const [matricula, setMatricula] = useState(bus?.matricula || '');
+
+  useEffect(() => {
+    if (open) setMatricula(bus?.matricula || '');
+  }, [open, bus]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,48 +26,28 @@ export default function BusForm({ bus, onSave, onCancel }: BusFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
-          {bus ? 'Editar' : 'Adicionar'} Autocarro
-        </h2>
+    <Sheet open={open} onClose={onCancel} title={`${bus ? 'Editar' : 'Adicionar'} Autocarro`}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <Input
+          type="text"
+          label="Matrícula *"
+          value={matricula}
+          onChange={(e) => setMatricula(e.target.value.toUpperCase())}
+          required
+          maxLength={20}
+          autoFocus
+          placeholder="Ex: AB-12-CD"
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Matrícula *
-            </label>
-            <input
-              type="text"
-              value={matricula}
-              onChange={(e) => setMatricula(e.target.value.toUpperCase())}
-              required
-              maxLength={20}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Ex: AB-12-CD"
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              {bus ? 'Atualizar' : 'Adicionar'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            Cancelar
+          </Button>
+          <Button type="submit">
+            {bus ? 'Atualizar' : 'Adicionar'}
+          </Button>
+        </div>
+      </form>
+    </Sheet>
   );
 }
-
-
-
