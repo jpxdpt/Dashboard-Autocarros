@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import AppShell from './components/layout/AppShell';
 import Dashboard from './components/Dashboard';
 import Reports from './components/Reports';
 import Login from './components/Login';
@@ -48,63 +49,16 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-app">
         <div className="text-center">
-          <div className="text-xl text-gray-600 mb-2">A verificar autenticação...</div>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+          <div className="text-xl text-label-secondary mb-2">A verificar autenticação...</div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent mx-auto"></div>
         </div>
       </div>
     );
   }
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
-}
-
-function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex space-x-8">
-              <Link
-                to="/"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Dashboard
-              </Link>
-              <Link
-                to="/reports"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Relatórios
-              </Link>
-              <Link
-                to="/schedules"
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Escalas
-              </Link>
-            </div>
-            <div className="flex items-center gap-4">
-              {authService.getUser() && (
-                <span className="text-sm text-gray-600">
-                  {authService.getUser()?.name}
-                </span>
-              )}
-              <button
-                onClick={() => authService.logout()}
-                className="text-gray-700 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium"
-              >
-                Sair
-              </button>
-            </div>
-          </div>
-        </div>
-      </nav>
-      {children}
-    </div>
-  );
 }
 
 function App() {
@@ -119,9 +73,9 @@ function App() {
           path="/"
           element={
             <PrivateRoute>
-              <AppLayout>
+              <AppShell>
                 <Dashboard />
-              </AppLayout>
+              </AppShell>
             </PrivateRoute>
           }
         />
@@ -129,9 +83,9 @@ function App() {
           path="/reports"
           element={
             <PrivateRoute>
-              <AppLayout>
+              <AppShell>
                 <Reports />
-              </AppLayout>
+              </AppShell>
             </PrivateRoute>
           }
         />
@@ -139,9 +93,9 @@ function App() {
           path="/schedules"
           element={
             <PrivateRoute>
-              <AppLayout>
+              <AppShell>
                 <ScheduleManagement />
-              </AppLayout>
+              </AppShell>
             </PrivateRoute>
           }
         />
