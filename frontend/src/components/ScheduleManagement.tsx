@@ -3,6 +3,9 @@ import { busesApi, Bus } from '../services/api';
 import { driversApi, Driver } from '../services/driversApi';
 import { schedulesApi, Schedule, ScheduleInput } from '../services/schedulesApi';
 import { authService } from '../services/auth';
+import Button from './ui/Button';
+import Card from './ui/Card';
+import Input from './ui/Input';
 
 function ScheduleManagement() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
@@ -170,35 +173,35 @@ function ScheduleManagement() {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Escalas Diárias</h1>
+        <h1 className="title-2">Escalas Diárias</h1>
         <div className="flex gap-3">
-          <input
+          <Input
+            label="Data"
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="w-auto"
           />
-          <button
+          <Button
             onClick={() => setShowForm(!showForm)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             {showForm ? 'Cancelar' : 'Nova Escala'}
-          </button>
+          </Button>
           {schedules.length > 0 && (
-            <button
+            <Button
               onClick={handlePrint}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+              className="bg-[var(--green)]"
             >
               Imprimir / PDF
-            </button>
+            </Button>
           )}
         </div>
       </div>
 
       {showForm && (
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <Card className="p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">Criar Escalas para {formatDate(selectedDate)}</h2>
           <div className="space-y-4">
             {formEntries.map((entry, index) => (
@@ -256,10 +259,10 @@ function ScheduleManagement() {
               {saving ? 'Guardando...' : 'Guardar Todas as Escalas'}
             </button>
           </div>
-        </div>
+        </Card>
       )}
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <Card className="overflow-hidden">
         <div className="p-4 border-b bg-gray-50">
           <h2 className="font-semibold">Escalas de {formatDate(selectedDate)}</h2>
           <p className="text-sm text-gray-500">{schedules.length} escala(s) registada(s)</p>
@@ -303,7 +306,7 @@ function ScheduleManagement() {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { driversApi, Driver } from '../services/driversApi';
 import { busesApi, Bus } from '../services/api';
 import { useToast } from '../hooks/useToast';
+import Button from './ui/Button';
+import Card from './ui/Card';
+import Sheet from './ui/Sheet';
 
 type DriverFilter = 'all' | 'expired-license' | 'expiring-license' | 'with-assignments' | 'without-assignments';
 
@@ -176,8 +179,8 @@ export default function DriversManagement() {
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">A carregar condutores...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+        <p className="text-label-secondary">A carregar condutores...</p>
       </div>
     );
   }
@@ -185,24 +188,21 @@ export default function DriversManagement() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">Gestão de Condutores</h2>
-        <button
+        <h2 className="title-2">Gestão de Condutores</h2>
+        <Button
           onClick={() => {
             setEditingDriver(undefined);
             setShowDriverForm(true);
           }}
-          className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+          className="px-5"
         >
           + Adicionar Condutor
-        </button>
+        </Button>
       </div>
 
       {/* Formulário de Condutor */}
       {showDriverForm && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-xl font-semibold mb-4">
-            {editingDriver ? 'Editar Condutor' : 'Novo Condutor'}
-          </h3>
+        <Sheet open onClose={() => { setShowDriverForm(false); setEditingDriver(undefined); }} title={editingDriver ? 'Editar Condutor' : 'Novo Condutor'}>
           <form onSubmit={handleSaveDriver} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -292,11 +292,11 @@ export default function DriversManagement() {
               </button>
             </div>
           </form>
-        </div>
+        </Sheet>
       )}
 
       {/* Filtros e Busca */}
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <Card className="p-6 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
             <label htmlFor="driver-search" className="block text-sm font-medium text-gray-700 mb-2">
@@ -349,11 +349,11 @@ export default function DriversManagement() {
             </button>
           </div>
         )}
-      </div>
+      </Card>
 
       {/* Lista de Condutores */}
       {filteredDrivers.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-md p-12 text-center">
+        <Card className="p-12 text-center">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
@@ -363,7 +363,7 @@ export default function DriversManagement() {
               ? 'Tente ajustar os filtros de busca.'
               : 'Comece adicionando um novo condutor.'}
           </p>
-        </div>
+        </Card>
       ) : (
         <>
           <div className="mb-4">
@@ -377,7 +377,7 @@ export default function DriversManagement() {
           const activeAssignments = driver.assignments?.filter(a => !a.unassignedAt) || [];
 
           return (
-            <div key={driver.id} className="bg-white rounded-lg shadow-md p-6">
+            <Card key={driver.id} className="p-6">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">{driver.name}</h3>
@@ -512,7 +512,7 @@ export default function DriversManagement() {
                   <p className="text-xs text-gray-500">Nenhum autocarro atribuído</p>
                 )}
               </div>
-            </div>
+            </Card>
           );
         })}
           </div>

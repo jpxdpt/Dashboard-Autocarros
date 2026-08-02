@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { settingsApi, EmailConfig } from '../services/settingsApi';
 import { authService } from '../services/auth';
 import { useToast } from '../hooks/useToast';
+import Card from './ui/Card';
 
 export default function Settings() {
   const [emailConfig, setEmailConfig] = useState<EmailConfig | null>(null);
@@ -82,8 +83,8 @@ export default function Settings() {
   if (loading) {
     return (
       <div className="text-center py-8">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">A carregar configurações...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent mx-auto mb-4"></div>
+        <p className="text-label-secondary">A carregar configurações...</p>
       </div>
     );
   }
@@ -105,12 +106,12 @@ export default function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Configurações</h2>
-        <p className="text-gray-600 mt-1">Gerir configurações do sistema</p>
+        <h2 className="title-2">Configurações</h2>
+        <p className="footnote mt-1">Gerir configurações do sistema</p>
       </div>
 
       {/* Perfil do Utilizador */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <Card className="p-6">
         <h3 className="text-xl font-semibold text-gray-900 mb-4">Perfil do Utilizador</h3>
         <form onSubmit={handleSaveProfile} className="flex items-end gap-4">
           <div className="flex-1 max-w-sm">
@@ -134,10 +135,10 @@ export default function Settings() {
             {savingProfile ? 'A guardar...' : 'Guardar'}
           </button>
         </form>
-      </div>
+      </Card>
 
       {/* Configurações de Email */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <Card className="p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
             <h3 className="text-xl font-semibold text-gray-900">Notificações por Email</h3>
@@ -341,7 +342,7 @@ export default function Settings() {
             <li>Teste sempre a configuração antes de ativar as notificações.</li>
           </ul>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

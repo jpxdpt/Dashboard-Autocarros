@@ -14,6 +14,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
+import Card from './ui/Card';
+import Button from './ui/Button';
 
 const INSPECTION_LABELS: Record<InspectionType, string> = {
   EXTINTORES: 'Extintores',
@@ -129,7 +131,7 @@ export default function Reports() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-gray-600">A carregar relatórios...</div>
+        <div className="text-xl text-label-secondary">A carregar relatórios...</div>
       </div>
     );
   }
@@ -137,7 +139,7 @@ export default function Reports() {
   if (!stats) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-red-600">Erro ao carregar estatísticas</div>
+        <div className="text-xl text-[var(--red)]">Erro ao carregar estatísticas</div>
       </div>
     );
   }
@@ -146,37 +148,37 @@ export default function Reports() {
   const pieData = preparePieData();
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-app p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <Card className="p-6 mb-6">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Relatórios e Análises</h1>
-              <p className="text-gray-600 mt-1">Estatísticas e exportação de dados</p>
+              <h1 className="display-1">Relatórios e Análises</h1>
+              <p className="footnote mt-1">Estatísticas e exportação de dados</p>
             </div>
             <div className="flex gap-3">
-              <button
+              <Button
                 onClick={handleExportPDF}
                 disabled={exporting === 'pdf'}
-                className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                variant="destructive"
               >
                 {exporting === 'pdf' ? 'A exportar...' : 'Exportar PDF'}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={handleExportExcel}
                 disabled={exporting === 'excel'}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-[var(--green)]"
               >
                 {exporting === 'excel' ? 'A exportar...' : 'Exportar Excel'}
-              </button>
+              </Button>
             </div>
-          </div>
-        </div>
+           </div>
+         </Card>
 
         {/* Filtros */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Filtros</h2>
+        <Card className="p-6 mb-6">
+          <h2 className="title-2 mb-4">Filtros</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -221,58 +223,58 @@ export default function Reports() {
                 ))}
               </select>
             </div>
-          </div>
-          <button
+           </div>
+           <button
             onClick={() => setFilters({})}
             className="mt-4 px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
           >
             Limpar Filtros
           </button>
-        </div>
+        </Card>
 
         {/* Estatísticas Gerais */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <Card className="p-6">
             <div className="text-sm font-medium text-gray-600">Total de Inspeções</div>
             <div className="text-3xl font-bold text-gray-900 mt-2">{stats.total}</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
+          </Card>
+          <Card className="p-6">
             <div className="text-sm font-medium text-gray-600">OK</div>
             <div className="text-3xl font-bold text-green-600 mt-2">{stats.ok}</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
+          </Card>
+          <Card className="p-6">
             <div className="text-sm font-medium text-gray-600">Próximas do Vencimento</div>
             <div className="text-3xl font-bold text-yellow-600 mt-2">{stats.warning}</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-md p-6">
+          </Card>
+          <Card className="p-6">
             <div className="text-sm font-medium text-gray-600">Expiradas</div>
             <div className="text-3xl font-bold text-red-600 mt-2">{stats.expired}</div>
-          </div>
-        </div>
+          </Card>
+         </div>
 
-        {/* Gráficos */}
+         {/* Gráficos */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
           {/* Gráfico de Barras */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <Card className="p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-4">
               Status por Tipo de Inspeção
             </h3>
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
+                <CartesianGrid stroke="var(--separator)" strokeDasharray="0" />
+                <XAxis dataKey="name" tick={{ fill: 'var(--label-secondary)', fontSize: 12 }} />
+                <YAxis tick={{ fill: 'var(--label-secondary)', fontSize: 12 }} />
+                <Tooltip contentStyle={{ background: 'var(--glass-bg)', backdropFilter: 'blur(20px)', border: '1px solid var(--glass-border)', borderRadius: 12, color: 'var(--label)' }} />
                 <Legend />
-                <Bar dataKey="OK" fill={COLORS.ok} />
-                <Bar dataKey="Próxima" fill={COLORS.warning} />
-                <Bar dataKey="Expirada" fill={COLORS.expired} />
+                <Bar dataKey="OK" fill="var(--green)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Próxima" fill="var(--orange)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="Expirada" fill="var(--red)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </div>
+           </Card>
 
           {/* Gráfico de Pizza */}
-          <div className="bg-white rounded-lg shadow-md p-6">
+          <Card className="p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Distribuição Geral</h3>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
@@ -293,11 +295,11 @@ export default function Reports() {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
-          </div>
+           </Card>
         </div>
 
         {/* Tabela Detalhada por Tipo */}
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <Card className="p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-4">
             Estatísticas por Tipo de Inspeção
           </h3>
@@ -345,7 +347,7 @@ export default function Reports() {
               </tbody>
             </table>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
