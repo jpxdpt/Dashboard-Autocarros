@@ -40,7 +40,10 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       }
     } catch (err: any) {
       console.error('Erro no login:', err);
-      setError(err.response?.data?.error || err.message || 'Erro ao fazer login');
+      const errorMessage = err.response?.status === 429
+        ? 'Foram feitas demasiadas tentativas. Aguarda alguns minutos e tenta novamente.'
+        : (err.response?.data?.error || err.message || 'Erro ao fazer login');
+      setError(errorMessage);
       authService.clearAuth(); // Limpar qualquer token inválido
     } finally {
       setLoading(false);

@@ -19,8 +19,8 @@ const router = Router();
 // Rate limiter para autenticação
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // máximo 5 tentativas
-  message: 'Muitas tentativas de login, tente novamente mais tarde.',
+  max: 10, // máximo 10 tentativas
+  message: 'Fizeste demasiadas tentativas de login. Aguarda 15 minutos e tenta novamente.',
   skipSuccessfulRequests: true,
 });
 

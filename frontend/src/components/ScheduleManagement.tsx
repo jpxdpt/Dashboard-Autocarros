@@ -47,8 +47,8 @@ function ScheduleManagement() {
   };
 
   const handleAddEntry = () => {
-    setFormEntries([
-      ...formEntries,
+    setFormEntries(prev => [
+      ...prev,
       { date: selectedDate, driverId: '', busId: '', service: '' }
     ]);
   };
@@ -58,13 +58,21 @@ function ScheduleManagement() {
   };
 
   const handleEntryChange = (index: number, field: keyof ScheduleInput, value: string) => {
-    const updated = [...formEntries];
-    updated[index] = { ...updated[index], [field]: value };
-    setFormEntries(updated);
+    setFormEntries(prev => prev.map((entry, i) =>
+      i === index ? { ...entry, [field]: value } : entry
+    ));
   };
 
   const handleSaveAll = async () => {
-    const validEntries = formEntries.filter(e => e.driverId && e.busId && e.service);
+    const validEntries = formEntries
+      .filter(e => e.driverId && e.busId && e.service)
+      .map(e => ({ ...e, date: selectedDate }));
+
+    const incompleteCount = formEntries.length - validEntries.length;
+    if (incompleteCount > 0) {
+      alert(`Atenção: ${incompleteCount} linha(s) incompleta(s) não serão gravadas. Preencha motorista, viatura e serviço em todas as linhas.`);
+    }
+
     if (validEntries.length === 0) {
       alert('Preencha pelo menos uma escala completa');
       return;

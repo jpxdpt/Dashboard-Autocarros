@@ -27,11 +27,18 @@ api.interceptors.request.use(
   }
 );
 
-// Interceptor para lidar com erros 401 (não autenticado)
+// Interceptor para lidar com erros 401 (não autenticado) e 429 (rate limit)
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+
+    if (error.response?.status === 429) {
+      error.response.data = {
+        error: 'Recebemos demasiados pedidos de uma vez. Aguarda alguns minutos e tenta novamente.',
+      };
+      return Promise.reject(error);
+    }
 
     // Se receber 401 e não for uma tentativa de refresh e não for a rota /auth/me
     if (

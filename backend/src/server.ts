@@ -25,20 +25,13 @@ app.use(express.json());
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // máximo 100 requests por IP
-  message: 'Muitos pedidos deste IP, tente novamente mais tarde.',
+  max: 500, // máximo 500 requests por IP
+  message: 'Recebemos demasiados pedidos de uma vez. Aguarda alguns minutos e tenta novamente.',
 });
 
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // máximo 5 tentativas de login
-  message: 'Muitas tentativas de login, tente novamente mais tarde.',
-  skipSuccessfulRequests: true,
-});
-
+// Nota: o rate limit de login/forgot-password é aplicado em routes/auth.ts
+// (aplicá-lo aqui em duplicado fazia com que o contador avançasse 2x por pedido)
 app.use('/api/', limiter);
-app.use('/api/auth/login', authLimiter);
-app.use('/api/auth/forgot-password', authLimiter);
 
 // Rotas públicas
 app.use('/api/auth', authRoutes);
