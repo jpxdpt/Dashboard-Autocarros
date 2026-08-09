@@ -77,6 +77,7 @@ export async function checkAndSendAlerts(companyId?: string): Promise<void> {
     const alertsToSend: Array<{
       inspectionId: string;
       busId: string;
+      companyId: string;
       matricula: string;
       type: InspectionType;
       lastInspectionDate: Date;
@@ -105,6 +106,7 @@ export async function checkAndSendAlerts(companyId?: string): Promise<void> {
           alertsToSend.push({
             inspectionId: inspection.id,
             busId: inspection.busId,
+            companyId: inspection.bus.companyId,
             matricula: inspection.bus.matricula,
             type: inspection.type,
             lastInspectionDate: inspection.lastInspectionDate,
@@ -118,6 +120,7 @@ export async function checkAndSendAlerts(companyId?: string): Promise<void> {
     // Enviar emails
     for (const alert of alertsToSend) {
       const sent = await sendInspectionAlert({
+        companyId: alert.companyId,
         matricula: alert.matricula,
         inspectionType: alert.type,
         lastInspectionDate: alert.lastInspectionDate,

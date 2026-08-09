@@ -18,9 +18,9 @@ function hasSmtpConfiguration(): boolean {
   return Boolean(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
 }
 
-async function getAlertRecipients(): Promise<string[]> {
+async function getAlertRecipients(companyId: string): Promise<string[]> {
   const users = await prisma.user.findMany({
-    where: { isActive: true },
+    where: { isActive: true, companyId },
     select: { email: true },
   });
 
@@ -28,6 +28,7 @@ async function getAlertRecipients(): Promise<string[]> {
 }
 
 export interface EmailAlertData {
+  companyId: string;
   matricula: string;
   inspectionType: string;
   lastInspectionDate: Date;
@@ -42,7 +43,7 @@ export async function sendInspectionAlert(data: EmailAlertData): Promise<boolean
       return false;
     }
     const emailFrom = process.env.EMAIL_FROM || 'noreply@guidedportugal.tech';
-    const recipients = await getAlertRecipients();
+    const recipients = await getAlertRecipients(data.companyId);
 
     if (recipients.length === 0) {
       console.error('Não existem contas ativas com email para receber alertas');
