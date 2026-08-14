@@ -14,6 +14,71 @@ const scheduleSchema = z.object({
 
 const updateScheduleSchema = scheduleSchema.partial();
 
+const daysOffSchema = z.object({
+  weekStart: z.string().transform((str) => new Date(str)),
+  entries: z.array(z.object({
+    driverId: z.string().uuid('ID do condutor inválido'),
+    days: z.array(z.number().int().min(0).max(6)).max(7),
+  })),
+});
+
+const getWeekStart = (date: Date) => {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  const day = result.getDay();
+  result.setDate(result.getDate() - (day === 0 ? 6 : day - 1));
+  return result;
+};
+
+// GET /api/schedules/days-off - Listar folgas de uma semana
+router.get('/days-off', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const companyId = req.companyId!;
+    const weekStart = getWeekStart(new Date(req.query.weekStart as string));
+    const daysOff = await prisma.weeklyDayOff.findMany({
+      where: { companyId, weekStart },
+      include: { driver: { select: { id: true, name: true } } },
+      orderBy: [{ driver: { name: 'asc' } }, { dayOfWeek: 'asc' }],
+    });
+    res.json(daysOff);
+  } catch (error) {
+    console.error('Erro ao listar folgas:', error);
+    res.status(500).json({ error: 'Erro ao listar folgas semanais' });
+  }
+});
+
+// PUT /api/schedules/days-off - Substituir folgas de uma semana
+router.put('/days-off', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const companyId = req.companyId!;
+    const { weekStart: inputWeekStart, entries } = daysOffSchema.parse(req.body);
+    const weekStart = getWeekStart(inputWeekStart);
+    const activeDrivers = await prisma.driver.findMany({ where: { companyId, isActive: true }, select: { id: true } });
+    const activeIds = new Set(activeDrivers.map((driver) => driver.id));
+    const rows = entries.flatMap((entry) => entry.days.map((dayOfWeek) => ({ companyId, driverId: entry.driverId, weekStart, dayOfWeek })));
+
+    if (rows.some((row) => !activeIds.has(row.driverId))) {
+      return res.status(404).json({ error: 'Condutor não encontrado' });
+    }
+
+    await prisma.$transaction([
+      prisma.weeklyDayOff.deleteMany({ where: { companyId, weekStart } }),
+      ...(rows.length ? [prisma.weeklyDayOff.createMany({ data: rows })] : []),
+    ]);
+
+    const saved = await prisma.weeklyDayOff.findMany({
+      where: { companyId, weekStart },
+      include: { driver: { select: { id: true, name: true } } },
+      orderBy: [{ driver: { name: 'asc' } }, { dayOfWeek: 'asc' }],
+    });
+    res.json(saved);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) return res.status(400).json({ error: 'Dados inválidos', details: error.errors });
+    console.error('Erro ao guardar folgas:', error);
+    res.status(500).json({ error: 'Erro ao guardar folgas semanais' });
+  }
+});
+
 // GET /api/schedules - Listar escalas
 router.get('/', authenticate, async (req: AuthRequest, res) => {
   try {

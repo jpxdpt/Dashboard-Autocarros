@@ -42,6 +42,7 @@ model Company {
   costs             Cost[]
   emailConfig       EmailConfig?
   schedules         Schedule[]
+  weeklyDaysOff     WeeklyDayOff[]
 
   @@map("companies")
 }
@@ -198,6 +199,7 @@ model Driver {
   licenses        DriverLicense[]
   assignments     DriverAssignment[]
   schedules       Schedule[]
+  weeklyDaysOff   WeeklyDayOff[]
 
   @@unique([companyId, licenseNumber])
   @@map("drivers")
@@ -330,3 +332,21 @@ model Schedule {
   @@map("schedules")
 }
 
+// Folgas semanais dos condutores
+model WeeklyDayOff {
+  id          String   @id @default(uuid())
+  companyId   String
+  driverId    String
+  weekStart   DateTime
+  dayOfWeek   Int
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  driver      Driver   @relation(fields: [driverId], references: [id], onDelete: Cascade)
+
+  @@unique([companyId, driverId, weekStart, dayOfWeek])
+  @@index([companyId, weekStart])
+  @@index([driverId])
+  @@map("weekly_days_off")
+}

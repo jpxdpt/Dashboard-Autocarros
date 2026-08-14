@@ -29,6 +29,14 @@ export interface ScheduleInput {
   service: string;
 }
 
+export interface WeeklyDayOff {
+  id: string;
+  driverId: string;
+  weekStart: string;
+  dayOfWeek: number;
+  driver?: { id: string; name: string };
+}
+
 export const schedulesApi = {
   getAll: (params?: { date?: string; startDate?: string; endDate?: string }) =>
     api.get<Schedule[]>('/schedules', { params }),
@@ -46,4 +54,9 @@ export const schedulesApi = {
   delete: (id: string) => api.delete(`/schedules/${id}`),
 
   deleteByDate: (date: string) => api.delete(`/schedules/date/${date}`),
+
+  getDaysOff: (weekStart: string) => api.get<WeeklyDayOff[]>('/schedules/days-off', { params: { weekStart } }),
+
+  saveDaysOff: (data: { weekStart: string; entries: { driverId: string; days: number[] }[] }) =>
+    api.put<WeeklyDayOff[]>('/schedules/days-off', data),
 };
