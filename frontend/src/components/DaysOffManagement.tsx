@@ -77,6 +77,70 @@ export default function DaysOffManagement() {
     }
   };
 
+  const handlePrint = () => {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    const escapeHTML = (value: string) => value.replace(/[&<>"']/g, character => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    })[character] || character);
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Folgas semanais - ${formatDate(weekDates[0])} a ${formatDate(weekDates[6])}</title>
+        <style>
+          * { box-sizing: border-box; }
+          @page { size: A4 landscape; margin: 10mm; }
+          body { font-family: Arial, sans-serif; color: #111; }
+          header { text-align: center; border-bottom: 2px solid #111; padding-bottom: 10px; margin-bottom: 18px; }
+          h1 { font-size: 21px; margin: 0 0 6px; }
+          .period { font-size: 13px; color: #444; }
+          table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+          th, td { border: 1px solid #111; padding: 7px; }
+          th { background: #f0f0f0; font-size: 11px; }
+          td { font-size: 11px; height: 12mm; }
+          th:first-child, td:first-child { width: 25%; text-align: left; }
+          th:not(:first-child), td:not(:first-child) { text-align: center; width: 10.7%; }
+          .off { font-weight: bold; color: #087f5b; }
+          footer { margin-top: 14px; text-align: center; color: #666; font-size: 9px; }
+        </style>
+      </head>
+      <body>
+        <header>
+          <h1>Folgas semanais dos motoristas</h1>
+          <div class="period">${formatDate(weekDates[0])} a ${formatDate(weekDates[6])}</div>
+        </header>
+        <table>
+          <thead>
+            <tr>
+              <th>Motorista</th>
+              ${dayLabels.map((label, index) => `<th>${label}<br>${formatDate(weekDates[index])}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${drivers.map(driver => `
+              <tr>
+                <td>${escapeHTML(driver.name)}</td>
+                ${dayLabels.map((_, index) => {
+                  const isDayOff = daysOff.some(item => item.driverId === driver.id && item.dayOfWeek === index);
+                  return `<td class="${isDayOff ? 'off' : ''}">${isDayOff ? 'FOLGA' : '-'}</td>`;
+                }).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+        <footer>Gerado em ${new Date().toLocaleString('pt-PT')}</footer>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(html);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   return (
     <div className="p-4 sm:p-6 space-y-6">
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end gap-4">
@@ -84,7 +148,10 @@ export default function DaysOffManagement() {
           <h1 className="title-2">Folgas dos Motoristas</h1>
           <p className="text-sm text-gray-500">Defina os dias de folga para cada motorista.</p>
         </div>
-        <Input label="Semana de" type="date" value={weekStart} onChange={event => setWeekStart(getSunday(event.target.value))} className="w-auto" />
+        <div className="flex flex-wrap items-end gap-3">
+          <Input label="Semana de" type="date" value={weekStart} onChange={event => setWeekStart(getSunday(event.target.value))} className="w-auto" />
+          <Button onClick={handlePrint} disabled={loading || drivers.length === 0} className="bg-[var(--green)]">Imprimir / PDF</Button>
+        </div>
       </div>
 
       <Card className="overflow-hidden">
