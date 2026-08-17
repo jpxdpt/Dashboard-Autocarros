@@ -29,6 +29,16 @@ const items = [
       </svg>
     ),
   },
+  {
+    to: '/days-off',
+    label: 'Folgas',
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 10h18M5 6h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" />
+        <path d="M8 3v6M16 3v6" />
+      </svg>
+    ),
+  },
 ];
 
 export default function Sidebar({ onNavigate }: { onNavigate?: () => void }) {

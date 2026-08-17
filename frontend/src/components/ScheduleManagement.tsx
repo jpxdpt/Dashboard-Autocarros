@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { busesApi, Bus } from '../services/api';
 import { driversApi, Driver } from '../services/driversApi';
-import { schedulesApi, Schedule, ScheduleInput, WeeklyDayOff } from '../services/schedulesApi';
+import { schedulesApi, Schedule, ScheduleInput } from '../services/schedulesApi';
 import { authService } from '../services/auth';
 import Button from './ui/Button';
 import Card from './ui/Card';
@@ -9,7 +9,6 @@ import Input from './ui/Input';
 
 function ScheduleManagement() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [daysOff, setDaysOff] = useState<WeeklyDayOff[]>([]);
   const [buses, setBuses] = useState<Bus[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
@@ -20,24 +19,6 @@ function ScheduleManagement() {
     { date: new Date().toISOString().split('T')[0], driverId: '', busId: '', service: '' }
   ]);
   const [userName, setUserName] = useState('');
-  const [weekStart, setWeekStart] = useState(() => getMonday(new Date().toISOString().split('T')[0]));
-  const [savingDaysOff, setSavingDaysOff] = useState(false);
-  const [showDaysOff, setShowDaysOff] = useState(false);
-
-  function getMonday(date: string) {
-    const value = new Date(`${date}T00:00:00`);
-    const day = value.getDay();
-    value.setDate(value.getDate() - (day === 0 ? 6 : day - 1));
-    return value.toISOString().split('T')[0];
-  }
-
-  const daysOffDates = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(`${weekStart}T00:00:00`);
-    date.setDate(date.getDate() + index);
-    return date.toISOString().split('T')[0];
-  });
-
-  const dayLabels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
 
   const getWeekDates = (dateStr: string) => {
     const date = new Date(`${dateStr}T00:00:00`);
@@ -64,48 +45,18 @@ function ScheduleManagement() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [busesRes, driversRes, schedulesRes, daysOffRes] = await Promise.all([
+      const [busesRes, driversRes, schedulesRes] = await Promise.all([
         busesApi.getAll(),
         driversApi.getAll(true),
-        schedulesApi.getAll({ startDate: scheduleWeekStart, endDate: scheduleWeekEnd }),
-        schedulesApi.getDaysOff(weekStart)
+        schedulesApi.getAll({ startDate: scheduleWeekStart, endDate: scheduleWeekEnd })
       ]);
       setBuses(busesRes.data);
       setDrivers(driversRes.data);
       setSchedules(schedulesRes.data);
-      setDaysOff(daysOffRes.data);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const toggleDayOff = (driverId: string, day: number) => {
-    setDaysOff((current) => {
-      const existing = current.find((item) => item.driverId === driverId && item.dayOfWeek === day);
-      if (existing) return current.filter((item) => item.id !== existing.id);
-      return [...current, { id: `new-${driverId}-${day}`, driverId, weekStart, dayOfWeek: day }];
-    });
-  };
-
-  const handleSaveDaysOff = async () => {
-    setSavingDaysOff(true);
-    try {
-      await schedulesApi.saveDaysOff({
-        weekStart,
-        entries: drivers.map((driver) => ({
-          driverId: driver.id,
-          days: daysOff.filter((item) => item.driverId === driver.id).map((item) => item.dayOfWeek),
-        })),
-      });
-      alert('Folgas semanais guardadas com sucesso!');
-      const response = await schedulesApi.getDaysOff(weekStart);
-      setDaysOff(response.data);
-    } catch (error: any) {
-      alert(error.response?.data?.error || 'Erro ao guardar folgas semanais');
-    } finally {
-      setSavingDaysOff(false);
     }
   };
 
@@ -255,9 +206,6 @@ function ScheduleManagement() {
           >
             {showForm ? 'Cancelar' : 'Nova Escala'}
           </Button>
-          <Button onClick={() => setShowDaysOff(!showDaysOff)} className="bg-[var(--green)]">
-            {showDaysOff ? 'Fechar Folgas' : 'Folgas Semanais'}
-          </Button>
           {schedules.length > 0 && (
             <Button
               onClick={handlePrint}
@@ -268,41 +216,6 @@ function ScheduleManagement() {
           )}
         </div>
       </div>
-
-      {showDaysOff && (
-        <Card className="p-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end gap-4 mb-4">
-            <div>
-              <h2 className="text-lg font-semibold">Folgas semanais</h2>
-              <p className="text-sm text-gray-500">Selecione os dias de folga de cada motorista.</p>
-            </div>
-            <Input label="Semana de" type="date" value={weekStart} onChange={(e) => setWeekStart(getMonday(e.target.value))} className="w-auto" />
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[40rem]">
-              <thead>
-                <tr className="border-b">
-                  <th className="px-3 py-3 text-left text-sm font-semibold">Motorista</th>
-                  {dayLabels.map((label, index) => <th key={label} className="px-3 py-3 text-center text-sm font-semibold">{label}<span className="block text-xs text-gray-400">{formatDate(daysOffDates[index])}</span></th>)}
-                </tr>
-              </thead>
-              <tbody>
-                {drivers.map((driver) => (
-                  <tr key={driver.id} className="border-b">
-                    <td className="px-3 py-3 text-sm font-medium">{driver.name}</td>
-                    {dayLabels.map((_, index) => {
-                      const dayOfWeek = index === 6 ? 0 : index + 1;
-                      const selected = daysOff.some((item) => item.driverId === driver.id && item.dayOfWeek === dayOfWeek);
-                      return <td key={dayOfWeek} className="px-3 py-3 text-center"><button type="button" onClick={() => toggleDayOff(driver.id, dayOfWeek)} className={`w-9 h-9 rounded-full text-sm font-semibold ${selected ? 'bg-[var(--green)] text-white' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`} aria-label={`${selected ? 'Remover' : 'Marcar'} folga de ${driver.name} ${dayLabels[index]}`}>{selected ? 'F' : '-'}</button></td>;
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="flex justify-end mt-4"><Button onClick={handleSaveDaysOff} disabled={savingDaysOff}>{savingDaysOff ? 'A guardar...' : 'Guardar Folgas'}</Button></div>
-        </Card>
-      )}
 
       {showForm && (
         <Card className="p-6 mb-6">

@@ -8,6 +8,7 @@ import Register from './components/Register';
 import ForgotPassword from './components/ForgotPassword';
 import ResetPassword from './components/ResetPassword';
 import ScheduleManagement from './components/ScheduleManagement';
+import DaysOffManagement from './components/DaysOffManagement';
 import { authService } from './services/auth';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
@@ -95,6 +96,16 @@ function App() {
             <PrivateRoute>
               <AppShell>
                 <ScheduleManagement />
+              </AppShell>
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/days-off"
+          element={
+            <PrivateRoute>
+              <AppShell>
+                <DaysOffManagement />
               </AppShell>
             </PrivateRoute>
           }
