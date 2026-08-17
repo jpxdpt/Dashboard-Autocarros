@@ -31,13 +31,27 @@ function ScheduleManagement() {
     return value.toISOString().split('T')[0];
   }
 
-  const weekDates = Array.from({ length: 7 }, (_, index) => {
+  const daysOffDates = Array.from({ length: 7 }, (_, index) => {
     const date = new Date(`${weekStart}T00:00:00`);
     date.setDate(date.getDate() + index);
     return date.toISOString().split('T')[0];
   });
 
   const dayLabels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+
+  const getWeekDates = (dateStr: string) => {
+    const date = new Date(`${dateStr}T00:00:00`);
+    date.setDate(date.getDate() - date.getDay());
+    return Array.from({ length: 7 }, (_, index) => {
+      const weekDate = new Date(date);
+      weekDate.setDate(date.getDate() + index);
+      return weekDate.toISOString().split('T')[0];
+    });
+  };
+
+  const scheduleWeekDates = getWeekDates(selectedDate);
+  const scheduleWeekStart = scheduleWeekDates[0];
+  const scheduleWeekEnd = scheduleWeekDates[6];
 
   useEffect(() => {
     const user = authService.getUser();
@@ -53,7 +67,7 @@ function ScheduleManagement() {
       const [busesRes, driversRes, schedulesRes, daysOffRes] = await Promise.all([
         busesApi.getAll(),
         driversApi.getAll(true),
-        schedulesApi.getAll({ date: selectedDate }),
+        schedulesApi.getAll({ startDate: scheduleWeekStart, endDate: scheduleWeekEnd }),
         schedulesApi.getDaysOff(weekStart)
       ]);
       setBuses(busesRes.data);
@@ -162,63 +176,58 @@ function ScheduleManagement() {
   };
 
   const generatePrintHTML = () => {
-    const formattedDate = new Date(selectedDate).toLocaleDateString('pt-PT', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    const formattedStart = formatDate(scheduleWeekStart);
+    const formattedEnd = formatDate(scheduleWeekEnd);
+    const escapeHTML = (value: string) => value.replace(/[&<>"']/g, character => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+    })[character] || character);
 
     return `
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Escala de Serviço - ${formattedDate}</title>
+        <title>Mapa semanal de serviço - ${formattedStart} a ${formattedEnd}</title>
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #000; padding-bottom: 20px; }
-          .header h1 { font-size: 24px; margin-bottom: 10px; }
-          .header .date { font-size: 18px; color: #333; }
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #000; padding: 12px; text-align: left; }
+          @page { size: A4 landscape; margin: 10mm; }
+          body { font-family: Arial, sans-serif; padding: 10px; color: #111; }
+          .header { text-align: center; margin-bottom: 16px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+          .header h1 { font-size: 20px; margin-bottom: 6px; }
+          .header .date { font-size: 13px; color: #333; }
+          table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+          th, td { border: 1px solid #000; padding: 5px; text-align: left; vertical-align: top; }
           th { background-color: #f0f0f0; font-weight: bold; }
-          td { font-size: 14px; }
-          .序号 { width: 50px; text-align: center; }
-          .footer { margin-top: 30px; text-align: center; font-size: 12px; color: #666; }
-          @media print {
-            body { padding: 0; }
-            .header { margin-bottom: 20px; }
-          }
+          td { font-size: 10px; height: 22mm; }
+          .day { width: 14.28%; }
+          .day-title { display: block; font-size: 11px; margin-bottom: 4px; }
+          .entry { border-top: 1px solid #bbb; padding-top: 3px; margin-top: 3px; }
+          .entry:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+          .empty { color: #777; }
+          .footer { margin-top: 12px; text-align: center; font-size: 9px; color: #666; }
         </style>
       </head>
       <body>
         <div class="header">
-          <h1>Escala de Serviço</h1>
-          <div class="date">${userName || 'Utilizador'} - ${formattedDate}</div>
+          <h1>Mapa semanal de serviço</h1>
+          <div class="date">${escapeHTML(userName || 'Utilizador')} - ${formattedStart} a ${formattedEnd}</div>
         </div>
         <table>
           <thead>
             <tr>
-              <th class="序号">#</th>
-              <th>Motorista</th>
-              <th>Matrícula</th>
-              <th>Serviço</th>
+              ${scheduleWeekDates.map(date => `<th class="day">${new Date(`${date}T00:00:00`).toLocaleDateString('pt-PT', { weekday: 'long', day: '2-digit', month: '2-digit' })}</th>`).join('')}
             </tr>
           </thead>
           <tbody>
-            ${schedules.map((s, i) => `
-              <tr>
-                <td class="序号">${i + 1}</td>
-                <td>${s.driver?.name || '-'}</td>
-                <td>${s.bus?.matricula || '-'}</td>
-                <td>${s.service}</td>
-              </tr>
-            `).join('')}
+            <tr>
+              ${scheduleWeekDates.map(date => {
+                const daySchedules = schedules.filter(schedule => schedule.date.split('T')[0] === date);
+                return `<td class="day">${daySchedules.length ? daySchedules.map(schedule => `<div class="entry"><strong>${escapeHTML(schedule.driver?.name || '-')}</strong><br>${escapeHTML(schedule.bus?.matricula || '-')}<br>${escapeHTML(schedule.service)}</div>`).join('') : '<span class="empty">Sem escalas</span>'}</td>`;
+              }).join('')}
+            </tr>
           </tbody>
         </table>
         <div class="footer">
-          Gerado em ${new Date().toLocaleString('pt-PT')}
+      Gerado em ${new Date().toLocaleString('pt-PT')}
         </div>
       </body>
       </html>
@@ -274,7 +283,7 @@ function ScheduleManagement() {
               <thead>
                 <tr className="border-b">
                   <th className="px-3 py-3 text-left text-sm font-semibold">Motorista</th>
-                  {dayLabels.map((label, index) => <th key={label} className="px-3 py-3 text-center text-sm font-semibold">{label}<span className="block text-xs text-gray-400">{formatDate(weekDates[index])}</span></th>)}
+                  {dayLabels.map((label, index) => <th key={label} className="px-3 py-3 text-center text-sm font-semibold">{label}<span className="block text-xs text-gray-400">{formatDate(daysOffDates[index])}</span></th>)}
                 </tr>
               </thead>
               <tbody>
@@ -359,47 +368,45 @@ function ScheduleManagement() {
 
       <Card className="overflow-hidden">
         <div className="p-4 border-b bg-gray-50">
-          <h2 className="font-semibold">Escalas de {formatDate(selectedDate)}</h2>
-          <p className="text-sm text-gray-500">{schedules.length} escala(s) registada(s)</p>
+           <h2 className="font-semibold">Mapa semanal: {formatDate(scheduleWeekStart)} a {formatDate(scheduleWeekEnd)}</h2>
+           <p className="text-sm text-gray-500">Semana de domingo a sábado · {schedules.length} escala(s) registada(s)</p>
         </div>
         {loading ? (
           <div className="p-8 text-center text-gray-500">A carregar...</div>
         ) : schedules.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            Nenhuma escala registada para esta data.
+             Nenhuma escala registada para esta semana.
             <br />
             Clique em "Nova Escala" para criar.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-          <table className="w-full min-w-[40rem]">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-4 py-3 text-left text-sm font-semibold">#</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Motorista</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Matrícula</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Serviço</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {schedules.map((schedule, index) => (
-                <tr key={schedule.id} className="border-t hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm">{index + 1}</td>
-                  <td className="px-4 py-3 text-sm">{schedule.driver?.name || '-'}</td>
-                  <td className="px-4 py-3 text-sm">{schedule.bus?.matricula || '-'}</td>
-                  <td className="px-4 py-3 text-sm">{schedule.service}</td>
-                  <td className="px-4 py-3">
-                    <button
-                      onClick={() => handleDelete(schedule.id)}
-                      className="text-red-600 hover:text-red-800 text-sm"
-                    >
-                      Eliminar
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+           <div className="overflow-x-auto">
+           <table className="w-full min-w-[40rem]">
+             <thead className="bg-gray-50">
+               <tr>
+                 {scheduleWeekDates.map(date => (
+                   <th key={date} className="px-3 py-3 text-left text-sm font-semibold min-w-[10rem]">
+                     {new Date(`${date}T00:00:00`).toLocaleDateString('pt-PT', { weekday: 'long', day: '2-digit', month: '2-digit' })}
+                   </th>
+                 ))}
+               </tr>
+             </thead>
+             <tbody>
+               <tr className="border-t align-top">
+                 {scheduleWeekDates.map(date => {
+                   const daySchedules = schedules.filter(schedule => schedule.date.split('T')[0] === date);
+                   return <td key={date} className="px-3 py-3 text-sm align-top min-w-[10rem]">
+                     {daySchedules.length === 0 ? <span className="text-gray-400">Sem escalas</span> : daySchedules.map(schedule => (
+                       <div key={schedule.id} className="mb-3 last:mb-0 border-b last:border-0 pb-2 last:pb-0">
+                         <div className="font-medium">{schedule.driver?.name || '-'}</div>
+                         <div className="text-gray-600">{schedule.bus?.matricula || '-'} · {schedule.service}</div>
+                         <button onClick={() => handleDelete(schedule.id)} className="text-red-600 hover:text-red-800 text-xs mt-1">Eliminar</button>
+                       </div>
+                     ))}
+                   </td>;
+                 })}
+               </tr>
+             </tbody>
           </table>
           </div>
         )}

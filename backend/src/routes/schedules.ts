@@ -99,8 +99,8 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
       };
     } else if (startDate && endDate) {
       where.date = {
-        gte: new Date(startDate as string),
-        lte: new Date(endDate as string),
+        gte: new Date(`${startDate as string}T00:00:00`),
+        lte: new Date(`${endDate as string}T23:59:59.999`),
       };
     }
 
