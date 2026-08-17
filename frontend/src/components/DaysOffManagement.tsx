@@ -5,26 +5,34 @@ import Button from './ui/Button';
 import Card from './ui/Card';
 import Input from './ui/Input';
 
+function getLisbonDate() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Lisbon', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 function getSunday(date: string) {
-  const value = new Date(`${date}T00:00:00`);
-  value.setDate(value.getDate() - value.getDay());
+  const value = new Date(`${date}T00:00:00Z`);
+  value.setUTCDate(value.getUTCDate() - value.getUTCDay());
   return value.toISOString().split('T')[0];
 }
 
 function formatDate(date: string) {
-  return new Date(`${date}T00:00:00`).toLocaleDateString('pt-PT');
+  return new Date(`${date}T12:00:00Z`).toLocaleDateString('pt-PT', { timeZone: 'Europe/Lisbon' });
 }
 
 export default function DaysOffManagement() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [daysOff, setDaysOff] = useState<WeeklyDayOff[]>([]);
-  const [weekStart, setWeekStart] = useState(() => getSunday(new Date().toISOString().split('T')[0]));
+  const [weekStart, setWeekStart] = useState(() => getSunday(getLisbonDate()));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const weekDates = Array.from({ length: 7 }, (_, index) => {
-    const date = new Date(`${weekStart}T00:00:00`);
-    date.setDate(date.getDate() + index);
+    const date = new Date(`${weekStart}T00:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + index);
     return date.toISOString().split('T')[0];
   });
   const dayLabels = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
@@ -149,7 +157,7 @@ export default function DaysOffManagement() {
           <p className="text-sm text-gray-500">Defina os dias de folga para cada motorista.</p>
         </div>
         <div className="flex flex-wrap items-end gap-3">
-          <Input label="Semana de" type="date" value={weekStart} onChange={event => setWeekStart(getSunday(event.target.value))} className="w-auto" />
+          <Input label="Domingo da semana" type="date" value={weekStart} onChange={event => setWeekStart(getSunday(event.target.value))} className="w-auto" />
           <Button onClick={handlePrint} disabled={loading || drivers.length === 0} className="bg-[var(--green)]">Imprimir / PDF</Button>
         </div>
       </div>

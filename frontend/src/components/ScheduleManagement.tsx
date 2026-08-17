@@ -7,16 +7,24 @@ import Button from './ui/Button';
 import Card from './ui/Card';
 import Input from './ui/Input';
 
+function getLisbonDate() {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Lisbon', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).formatToParts(new Date());
+  const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
 function ScheduleManagement() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [buses, setBuses] = useState<Bus[]>([]);
   const [drivers, setDrivers] = useState<Driver[]>([]);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(getLisbonDate());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [formEntries, setFormEntries] = useState<ScheduleInput[]>([
-    { date: new Date().toISOString().split('T')[0], driverId: '', busId: '', service: '' }
+    { date: getLisbonDate(), driverId: '', busId: '', service: '' }
   ]);
   const [userName, setUserName] = useState('');
 
@@ -113,8 +121,8 @@ function ScheduleManagement() {
   };
 
   const generatePrintHTML = () => {
-    const formattedDate = new Date(`${selectedDate}T00:00:00`).toLocaleDateString('pt-PT', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    const formattedDate = new Date(`${selectedDate}T12:00:00Z`).toLocaleDateString('pt-PT', {
+      timeZone: 'Europe/Lisbon', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
     const escapeHTML = (value: string) => value.replace(/[&<>"']/g, character => ({
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'

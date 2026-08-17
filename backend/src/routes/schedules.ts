@@ -24,9 +24,14 @@ const daysOffSchema = z.object({
 
 const getWeekStart = (date: Date) => {
   const result = new Date(date);
-  result.setHours(0, 0, 0, 0);
-  const day = result.getDay();
-  result.setDate(result.getDate() - (day === 0 ? 6 : day - 1));
+  result.setUTCHours(0, 0, 0, 0);
+  result.setUTCDate(result.getUTCDate() - result.getUTCDay());
+  return result;
+};
+
+const getLegacyMonday = (sunday: Date) => {
+  const result = new Date(sunday);
+  result.setUTCDate(result.getUTCDate() - 6);
   return result;
 };
 
@@ -35,8 +40,9 @@ router.get('/days-off', authenticate, async (req: AuthRequest, res) => {
   try {
     const companyId = req.companyId!;
     const weekStart = getWeekStart(new Date(req.query.weekStart as string));
+    const legacyMonday = getLegacyMonday(weekStart);
     const daysOff = await prisma.weeklyDayOff.findMany({
-      where: { companyId, weekStart },
+      where: { companyId, weekStart: { in: [weekStart, legacyMonday] } },
       include: { driver: { select: { id: true, name: true } } },
       orderBy: [{ driver: { name: 'asc' } }, { dayOfWeek: 'asc' }],
     });
@@ -53,6 +59,7 @@ router.put('/days-off', authenticate, async (req: AuthRequest, res) => {
     const companyId = req.companyId!;
     const { weekStart: inputWeekStart, entries } = daysOffSchema.parse(req.body);
     const weekStart = getWeekStart(inputWeekStart);
+    const legacyMonday = getLegacyMonday(weekStart);
     const activeDrivers = await prisma.driver.findMany({ where: { companyId, isActive: true }, select: { id: true } });
     const activeIds = new Set(activeDrivers.map((driver) => driver.id));
     const rows = entries.flatMap((entry) => entry.days.map((dayOfWeek) => ({ companyId, driverId: entry.driverId, weekStart, dayOfWeek })));
@@ -63,6 +70,7 @@ router.put('/days-off', authenticate, async (req: AuthRequest, res) => {
 
     await prisma.$transaction([
       prisma.weeklyDayOff.deleteMany({ where: { companyId, weekStart } }),
+      prisma.weeklyDayOff.deleteMany({ where: { companyId, weekStart: legacyMonday } }),
       ...(rows.length ? [prisma.weeklyDayOff.createMany({ data: rows })] : []),
     ]);
 
